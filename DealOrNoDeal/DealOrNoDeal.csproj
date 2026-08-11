@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>DealOrNoDeal</RootNamespace>
+    <AssemblyName>DealOrNoDeal</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+
+    <!-- The GitHub self-updater only ever swaps in one downloaded .exe
+         over the currently-running one (see GitHubSelfUpdater's
+         SelfUpdater) - these make "Publish" always produce a single,
+         fully self-contained exe with no loose sibling DLLs, instead of
+         requiring extra flags to be remembered on every publish. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Auto-globbed as EmbeddedResource by default - Update (not
+         Include) avoids a duplicate-item build error, DependentUpon
+         kept for parity with the old csproj. -->
+    <EmbeddedResource Update="DealOrNoDeal.resx">
+      <DependentUpon>DealOrNoDeal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ucBankerOffer.resx">
+      <DependentUpon>ucBankerOffer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ucFinalChoice.resx">
+      <DependentUpon>ucFinalChoice.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ucOpenCaseAnimation.resx">
+      <DependentUpon>ucOpenCaseAnimation.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <!-- Not auto-globbed - loaded at runtime via
+         Assembly.GetManifestResourceStream(logicalName). -->
+    <EmbeddedResource Include="Images\CaseClosed.png">
+      <LogicalName>DealOrNoDeal.CaseClosed.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Images\CaseOpen.png">
+      <LogicalName>DealOrNoDeal.CaseOpen.png</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CustomWFUI\CustomWFUI\CustomWFUI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <COMReference Include="AxWMPLib">
+      <Guid>{6BF52A50-394A-11D3-B153-00C04F79FAA6}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>aximp</WrapperTool>
+      <Isolated>False</Isolated>
+    </COMReference>
+    <COMReference Include="WMPLib">
+      <Guid>{6BF52A50-394A-11D3-B153-00C04F79FAA6}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+</Project>

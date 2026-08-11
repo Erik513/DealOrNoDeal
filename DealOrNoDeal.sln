@@ -1,0 +1,31 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33214.272
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DealOrNoDeal", "DealOrNoDeal\DealOrNoDeal.csproj", "{F1204EC8-5835-46BC-ABC4-1C0891087A7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomWFUI", "..\CustomWFUI\CustomWFUI\CustomWFUI.csproj", "{67BEB9A5-DD73-4C4A-910B-D9848640924A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F1204EC8-5835-46BC-ABC4-1C0891087A7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1204EC8-5835-46BC-ABC4-1C0891087A7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1204EC8-5835-46BC-ABC4-1C0891087A7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1204EC8-5835-46BC-ABC4-1C0891087A7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67BEB9A5-DD73-4C4A-910B-D9848640924A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67BEB9A5-DD73-4C4A-910B-D9848640924A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67BEB9A5-DD73-4C4A-910B-D9848640924A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67BEB9A5-DD73-4C4A-910B-D9848640924A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {43C542B9-D921-4FDA-95E1-D87A4EE5DA17}
+	EndGlobalSection
+EndGlobal
