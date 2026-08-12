@@ -391,7 +391,12 @@ namespace DealOrNoDeal
             ComponentResourceManager resources = new ComponentResourceManager(typeof(DealOrNoDeal));
 
             AutoScaleMode = AutoScaleMode.Dpi;
-            MinimumSize = new Size(1200, 700);
+            // Tall enough that the 15-row amount strips (each needs ~30px
+            // to show their text without clipping) still fit underneath
+            // the now-260px-tall "My Case"/"Offers" cards - 700 was only
+            // ever enough before those cards were made taller to stop the
+            // offer log itself from clipping.
+            MinimumSize = new Size(1200, 800);
             ClientSize = new Size(1659, 900);
             StartPosition = FormStartPosition.CenterScreen;
 
