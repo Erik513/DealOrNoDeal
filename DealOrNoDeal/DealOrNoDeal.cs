@@ -396,7 +396,14 @@ namespace DealOrNoDeal
             // the now-260px-tall "My Case"/"Offers" cards - 700 was only
             // ever enough before those cards were made taller to stop the
             // offer log itself from clipping.
-            MinimumSize = new Size(1200, 800);
+            //
+            // Wide enough that the middle column's own minimum content
+            // width doesn't squeeze the right column's card out of its
+            // gold border - confirmed by testing a range of widths that
+            // the border only reliably renders from ~1350px up; 1200 left
+            // no slack at all. 1450 keeps a safety margin beyond that
+            // measured threshold.
+            MinimumSize = new Size(1450, 800);
             ClientSize = new Size(1659, 900);
             StartPosition = FormStartPosition.CenterScreen;
 
@@ -629,16 +636,6 @@ namespace DealOrNoDeal
         {
             TableLayoutPanel strip = UIStyles.TableLayoutPanels.CreateDark(1, count);
             strip.Dock = DockStyle.Fill;
-            // Border color shown directly as the panel's own background,
-            // peeking through every button's Margin gap (including at the
-            // outer edges) - CellBorderStyle.Single's own border painting
-            // turned out unreliable here: it silently dropped the outer
-            // border on the right strip specifically (rounding-dependent),
-            // and wrapping the panel to work around that broke its border
-            // painting altogether. Plain BackColor-through-margins doesn't
-            // depend on any of that, so it's reliable regardless of how the
-            // panel's own width happens to round.
-            strip.BackColor = Color.FromArgb(160, 160, 160);
             strip.RowStyles.Clear();
             strip.ColumnStyles.Clear();
             strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
@@ -830,7 +827,15 @@ namespace DealOrNoDeal
             if (selectedCase == null)
             {
                 selectedCase = clickedCase;
-                selectedCase.Dock = DockStyle.Fill;
+                // Fixed, smaller size instead of Dock=Fill - filling the
+                // whole "My Case" card made it look oversized next to
+                // everything else.
+                Size ownCaseSize = new Size(140, 140);
+                selectedCase.Dock = DockStyle.None;
+                selectedCase.Size = ownCaseSize;
+                selectedCase.Location = new Point(
+                    (panelMyCase.Width - ownCaseSize.Width) / 2,
+                    (panelMyCase.Height - ownCaseSize.Height) / 2);
                 panelMyCase.Controls.Add(selectedCase);
                 selectedCase.Enabled = false;
                 UpdateInfoText();
