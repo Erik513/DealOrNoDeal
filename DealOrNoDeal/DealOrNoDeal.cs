@@ -61,6 +61,8 @@ namespace DealOrNoDeal
 
         private readonly Random random = new Random();
 
+        private static readonly Size OwnCaseSize = new Size(140, 140);
+
         private const string UpdateRepositoryOwner = "Erik513";
         private const string UpdateRepositoryName = "DealOrNoDeal";
         private static readonly TimeSpan UpdateCheckTimeout = TimeSpan.FromSeconds(5);
@@ -436,6 +438,11 @@ namespace DealOrNoDeal
 
             Panel myCaseCard = BuildCard(AppLocalization.Get("Game.MyCaseLabel"), out Panel myCaseContent, out labelMyCaseTitle);
             panelMyCase = myCaseContent;
+            // selectedCase is a fixed size, not Dock=Fill, so it doesn't
+            // automatically stay centered when the window (and so
+            // panelMyCase) is resized - re-center it manually whenever
+            // that happens.
+            panelMyCase.Resize += (s, e) => CenterOwnCaseDisplay();
             TableLayoutPanel lowAmountStrip = BuildAmountStrip(0, 15);
 
             column.Controls.Add(myCaseCard, 0, 0);
@@ -819,6 +826,16 @@ namespace DealOrNoDeal
             pboxOfferCover.Visible = false;
         }
 
+        private void CenterOwnCaseDisplay()
+        {
+            if (selectedCase == null || selectedCase.Parent != panelMyCase)
+                return;
+
+            selectedCase.Location = new Point(
+                (panelMyCase.Width - selectedCase.Width) / 2,
+                (panelMyCase.Height - selectedCase.Height) / 2);
+        }
+
         private void Case_Click(object sender, EventArgs e)
         {
             PictureBox clickedCase = (PictureBox)sender;
@@ -827,16 +844,17 @@ namespace DealOrNoDeal
             if (selectedCase == null)
             {
                 selectedCase = clickedCase;
+                // Reparent first, while still Dock=Fill (matching how this
+                // always worked) - changing Dock/Size/Location while it's
+                // still sitting in caseGridPanel's TableLayoutPanel cell
+                // left it invisible after the move.
+                panelMyCase.Controls.Add(selectedCase);
                 // Fixed, smaller size instead of Dock=Fill - filling the
                 // whole "My Case" card made it look oversized next to
                 // everything else.
-                Size ownCaseSize = new Size(140, 140);
                 selectedCase.Dock = DockStyle.None;
-                selectedCase.Size = ownCaseSize;
-                selectedCase.Location = new Point(
-                    (panelMyCase.Width - ownCaseSize.Width) / 2,
-                    (panelMyCase.Height - ownCaseSize.Height) / 2);
-                panelMyCase.Controls.Add(selectedCase);
+                selectedCase.Size = OwnCaseSize;
+                CenterOwnCaseDisplay();
                 selectedCase.Enabled = false;
                 UpdateInfoText();
             }
