@@ -629,7 +629,16 @@ namespace DealOrNoDeal
         {
             TableLayoutPanel strip = UIStyles.TableLayoutPanels.CreateDark(1, count);
             strip.Dock = DockStyle.Fill;
-            strip.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            // Border color shown directly as the panel's own background,
+            // peeking through every button's Margin gap (including at the
+            // outer edges) - CellBorderStyle.Single's own border painting
+            // turned out unreliable here: it silently dropped the outer
+            // border on the right strip specifically (rounding-dependent),
+            // and wrapping the panel to work around that broke its border
+            // painting altogether. Plain BackColor-through-margins doesn't
+            // depend on any of that, so it's reliable regardless of how the
+            // panel's own width happens to round.
+            strip.BackColor = Color.FromArgb(160, 160, 160);
             strip.RowStyles.Clear();
             strip.ColumnStyles.Clear();
             strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
@@ -643,7 +652,13 @@ namespace DealOrNoDeal
                     AppCurrencyFormatter.Format(CaseAmountValues[caseNumber - 1], "#,0"));
                 amountButton.Name = "button" + caseNumber;
                 amountButton.Dock = DockStyle.Fill;
-                amountButton.Margin = new Padding(2);
+                // 4, not 2 - the right strip's column consistently renders
+                // 1-2px narrower than the left's (percent-column rounding),
+                // which was exactly enough to swallow a 2px margin whole,
+                // leaving no visible gap at all on that side. A bigger
+                // margin leaves a visible gap on both sides even after
+                // that deficit, just not pixel-identical.
+                amountButton.Margin = new Padding(4);
                 amountButton.TabStop = false;
                 amountButton.Cursor = Cursors.Default;
                 amountButton.BackColor = Color.Yellow;
