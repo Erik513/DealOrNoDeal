@@ -2,14 +2,12 @@
 
 A WinForms recreation of the "Deal or No Deal" game show, built on top of the [CustomWFUI](https://github.com/Erik513/CustomWFUI) component library.
 
-![Deal or No Deal — case selection screen](docs/screenshot.png)
-
 ## What it does
 
 - 30 cases, each hiding one of the show's classic money amounts (0€ up to 1.000.000€)
 - A banker who makes increasingly realistic offers as the round progresses — never above the fair average of what's still in play, dampened further the more the remaining amounts vary
 - A dramatic slow-reveal animation for the final keep-or-swap decision
-- Full language switching between German and English, and currency switching between € and $ — both apply live, no restart needed
+- Presented in English, with German also available as a second language — and currency switching between € and $ — both apply live, no restart needed
 - Checks GitHub for new releases on startup and can update itself in place
 
 ## Requirements
