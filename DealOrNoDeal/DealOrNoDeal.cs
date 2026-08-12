@@ -256,7 +256,11 @@ namespace DealOrNoDeal
 
                 // Re-adding to the grid with an explicit cell also moves it
                 // out of panelMyCase again, if it had been picked as the
-                // player's own case last round.
+                // player's own case last round - but Case_Click also
+                // switches that one case to a fixed small Size with
+                // Dock=None, which otherwise stuck around and left it
+                // tiny and mispositioned back in the grid.
+                caseBox.Dock = DockStyle.Fill;
                 caseGridPanel.Controls.Add(caseBox, i % 5, i / 5);
                 caseBox.Visible = true;
                 caseBox.Enabled = true;
@@ -433,7 +437,7 @@ namespace DealOrNoDeal
             // Matches the offers card's height on the right for visual
             // symmetry - see BuildRightColumn for why it needs to be this
             // tall.
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 260));
+            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 230));
             column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             Panel myCaseCard = BuildCard(AppLocalization.Get("Game.MyCaseLabel"), out Panel myCaseContent, out labelMyCaseTitle);
@@ -461,8 +465,9 @@ namespace DealOrNoDeal
             // up to 8 accumulated banker offers regardless of window size -
             // txtOfferLog has no scrollbar, so anything taller than this
             // card would previously just get clipped off. 190 was only
-            // ever enough for about 5 lines.
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 260));
+            // ever enough for about 5 lines; 230 still comfortably fits all
+            // 8 with margin to spare.
+            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 230));
             column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             Panel offerCard = BuildCard(AppLocalization.Get("Game.OffersLabel"), out Panel offerContent, out labelOffersTitle);
@@ -950,8 +955,6 @@ namespace DealOrNoDeal
             foreach (PictureBox caseBox in caseList)
                 caseBox.Enabled = false;
 
-            finalChoiceView.MyCaseImage = selectedCase.Image;
-            finalChoiceView.RemainingCaseImage = lastRemainingCase?.Image;
             finalChoiceView.Visible = true;
             finalChoiceView.BringToFront();
             SetInfoText("Game.MakeDecision");

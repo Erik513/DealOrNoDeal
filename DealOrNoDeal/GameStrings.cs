@@ -34,6 +34,8 @@ namespace DealOrNoDeal
                 ["BankerOffer.Placeholder"] = "Offer",
 
                 ["FinalChoice.Prompt"] = "Keep or swap your case?",
+                ["FinalChoice.Keep"] = "Keep",
+                ["FinalChoice.Swap"] = "Swap",
 
                 ["OpenCase.ClickToSkip"] = "Click to skip!",
                 ["OpenCase.ClickToClose"] = "Click to close!",
@@ -66,6 +68,8 @@ namespace DealOrNoDeal
                 ["BankerOffer.Placeholder"] = "Angebot",
 
                 ["FinalChoice.Prompt"] = "Koffer behalten oder tauschen?",
+                ["FinalChoice.Keep"] = "Behalten",
+                ["FinalChoice.Swap"] = "Tauschen",
 
                 ["OpenCase.ClickToSkip"] = "Klicken zum Überspringen!",
                 ["OpenCase.ClickToClose"] = "Klicken zum Schließen!",
