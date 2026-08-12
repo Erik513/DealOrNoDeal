@@ -9,14 +9,14 @@ namespace DealOrNoDeal
     /// <summary>
     /// Final screen: shows the winnings and offers a restart. Uses the same
     /// plain gray background as the other game-phase controls. The amount
-    /// is the visual focus - "Du hast" / AMOUNT (large, gold) / "gewonnen!"
-    /// instead of one plain sentence.
+    /// is the visual focus - "Your winnings:" / AMOUNT (large, gold) -
+    /// instead of one plain sentence (a literal "You have X won!"
+    /// word-for-word translation doesn't read as valid English).
     /// </summary>
     public partial class ucGameOver : UserControl
     {
         private readonly Label labelPrefix;
         private readonly Label labelAmount;
-        private readonly Label labelSuffix;
         private readonly Label labelOwnCase;
         private readonly Button btnRestart;
 
@@ -32,17 +32,15 @@ namespace DealOrNoDeal
             Dock = DockStyle.Fill;
             BackColor = UIStyles.Colors.BackgroundMediumElevated;
 
-            // Prefix/suffix get small, fixed-height rows right against the
-            // amount (Dock=Bottom/Top so they hug its edges), instead of
-            // large percentage rows that centered them with lots of empty
-            // space around them - the amount is the focus, "Du hast" and
-            // "gewonnen!" are just its immediate frame.
-            TableLayoutPanel main = UIStyles.TableLayoutPanels.CreateStandard(1, 7);
+            // Prefix gets a small, fixed-height row right against the
+            // amount (instead of a large percentage row that centered it
+            // with lots of empty space around it) - the amount is the
+            // focus, "Your winnings:" is just its immediate frame.
+            TableLayoutPanel main = UIStyles.TableLayoutPanels.CreateStandard(1, 6);
             main.Dock = DockStyle.Fill;
             main.BackColor = Color.Transparent;
             main.RowStyles.Clear();
             main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -69,12 +67,6 @@ namespace DealOrNoDeal
             labelAmount.AutoEllipsis = false;
             labelAmount.Font = new Font(UIStyles.Fonts.Title.FontFamily, 66f, FontStyle.Bold);
 
-            labelSuffix = UIStyles.Labels.CreateTitle(AppLocalization.Get("GameOver.Suffix"));
-            labelSuffix.AutoSize = true;
-            labelSuffix.Anchor = AnchorStyles.None;
-            labelSuffix.BackColor = Color.Transparent;
-            labelSuffix.Font = new Font(UIStyles.Fonts.Title.FontFamily, 26f, FontStyle.Regular);
-
             // Secondary line: what was actually in the player's own case -
             // shown no matter how the game ended (kept, swapped, or a
             // banker offer accepted), since accepting an offer never
@@ -94,9 +86,8 @@ namespace DealOrNoDeal
 
             main.Controls.Add(labelPrefix, 0, 1);
             main.Controls.Add(labelAmount, 0, 2);
-            main.Controls.Add(labelSuffix, 0, 3);
-            main.Controls.Add(labelOwnCase, 0, 4);
-            main.Controls.Add(btnRestart, 0, 6);
+            main.Controls.Add(labelOwnCase, 0, 3);
+            main.Controls.Add(btnRestart, 0, 5);
 
             Controls.Add(main);
         }
@@ -122,7 +113,6 @@ namespace DealOrNoDeal
         public void RefreshLanguage()
         {
             labelPrefix.Text = AppLocalization.Get("GameOver.Prefix");
-            labelSuffix.Text = AppLocalization.Get("GameOver.Suffix");
             btnRestart.Text = AppLocalization.Get("GameOver.Restart");
 
             if (ownCaseAmountText != null)

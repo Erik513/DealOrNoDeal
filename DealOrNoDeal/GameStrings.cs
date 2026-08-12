@@ -24,10 +24,9 @@ namespace DealOrNoDeal
                 ["Game.AcceptOrContinue"] = "Accept the offer, or keep going?",
                 ["Game.OpenMoreCases"] = "Open {0} more cases until the banker's offer!",
                 ["Game.MakeDecision"] = "Make your decision!",
-                ["Game.Over"] = "Game over!",
+                ["Game.Over"] = "Game complete!",
 
-                ["GameOver.Prefix"] = "You have",
-                ["GameOver.Suffix"] = "won!",
+                ["GameOver.Prefix"] = "Your winnings:",
                 ["GameOver.Restart"] = "Restart",
                 ["GameOver.OwnCaseContained"] = "Your own case contained: {0}",
 
@@ -60,8 +59,7 @@ namespace DealOrNoDeal
                 ["Game.MakeDecision"] = "Triff deine Entscheidung!",
                 ["Game.Over"] = "Spiel beendet!",
 
-                ["GameOver.Prefix"] = "Du hast",
-                ["GameOver.Suffix"] = "gewonnen!",
+                ["GameOver.Prefix"] = "Dein Gewinn:",
                 ["GameOver.Restart"] = "Neu starten",
                 ["GameOver.OwnCaseContained"] = "Dein eigener Koffer enthielt: {0}",
 

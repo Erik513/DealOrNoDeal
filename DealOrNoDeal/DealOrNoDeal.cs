@@ -107,6 +107,7 @@ namespace DealOrNoDeal
         // CaseOpeningView_CaseOpenedCompleted knows to end the game instead
         // of continuing the normal open-more-cases flow once it's dismissed.
         private string pendingFinalResultAmount;
+        private decimal pendingFinalResultValue;
 
         // True only when the game ended by keeping the original case - in
         // that case its content IS the winnings already shown, so the
@@ -115,6 +116,15 @@ namespace DealOrNoDeal
         // the line stays shown) for an accepted banker offer or a swap,
         // where it reveals something not shown anywhere else.
         private bool endedByKeepingOwnCase;
+
+        // Raw winnings amount + the format it was shown with (case amounts
+        // use "#,0", banker offers - computed percentages - use the default
+        // "#,0.00"), remembered so RefreshCurrency can re-format the
+        // game-over screen too instead of leaving it stuck in whatever
+        // currency was active when the round ended.
+        private decimal wonAmountValue;
+        private string wonAmountFormat;
+        private decimal? shownOwnCaseAmountValue;
 
         // Remembered so RefreshLanguage can rebuild whatever labelInfoText
         // is currently showing (it changes constantly during play) in the
@@ -132,7 +142,7 @@ namespace DealOrNoDeal
             selectedCase = null;
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
-            bankerOfferView.OfferAccepted += amount => EndGame(amount);
+            bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, "#,0.00");
             caseOpeningView.AnimationCompleted += CaseOpeningView_AnimationCompleted;
             caseOpeningView.CaseOpenedCompleted += CaseOpeningView_CaseOpenedCompleted;
             finalChoiceView.KeepMyCaseClicked += (s, e) => RevealFinalCase(selectedCase);
@@ -185,9 +195,8 @@ namespace DealOrNoDeal
         /// <summary>
         /// Re-formats every already-shown amount with the newly selected
         /// currency - called once, whenever AppCurrencyFormatter.Currency
-        /// changes. The game-over screen's own final numbers are
-        /// deliberately left as originally shown, like a receipt - the
-        /// round is already over at that point.
+        /// changes. Includes the game-over screen once the round is over,
+        /// same as every other still-visible amount.
         /// </summary>
         private void RefreshCurrency()
         {
@@ -200,6 +209,14 @@ namespace DealOrNoDeal
 
             if (currentOfferAmount.HasValue)
                 bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(currentOfferAmount.Value));
+
+            if (IsGameOver)
+            {
+                gameOverView.ShowResult(AppCurrencyFormatter.Format(wonAmountValue, wonAmountFormat));
+
+                if (shownOwnCaseAmountValue.HasValue)
+                    gameOverView.ShowOwnCaseAmount(AppCurrencyFormatter.Format(shownOwnCaseAmountValue.Value, "#,0"));
+            }
         }
 
         private string AmountTextOf(PictureBox caseBox)
@@ -220,6 +237,7 @@ namespace DealOrNoDeal
 
             endedByKeepingOwnCase = caseBox == selectedCase;
             pendingFinalResultAmount = AmountTextOf(caseBox);
+            pendingFinalResultValue = CaseAmountValues[caseAmountIndex[caseBox]];
             caseOpeningView.SlowReveal = true;
             caseOpeningView.SetCaseAmount(pendingFinalResultAmount);
             caseOpeningView.Visible = true;
@@ -885,8 +903,9 @@ namespace DealOrNoDeal
             if (pendingFinalResultAmount != null)
             {
                 string resultAmount = pendingFinalResultAmount;
+                decimal resultValue = pendingFinalResultValue;
                 pendingFinalResultAmount = null;
-                EndGame(resultAmount);
+                EndGame(resultAmount, resultValue, "#,0");
                 return;
             }
 
@@ -964,12 +983,14 @@ namespace DealOrNoDeal
         /// Ends the game unambiguously - whether by accepting a banker's
         /// offer, or by keeping/swapping the case at the very end.
         /// </summary>
-        private void EndGame(string wonAmount)
+        private void EndGame(string wonAmount, decimal wonAmountValue, string wonAmountFormat)
         {
             if (IsGameOver)
                 return;
 
             IsGameOver = true;
+            this.wonAmountValue = wonAmountValue;
+            this.wonAmountFormat = wonAmountFormat;
 
             foreach (PictureBox caseBox in caseList)
                 caseBox.Enabled = false;
@@ -1003,9 +1024,15 @@ namespace DealOrNoDeal
             // swap. If the player kept their own case, its content already
             // IS the winnings, so the line would just repeat that number.
             if (endedByKeepingOwnCase)
+            {
+                shownOwnCaseAmountValue = null;
                 gameOverView.HideOwnCaseAmount();
+            }
             else
+            {
+                shownOwnCaseAmountValue = CaseAmountValues[caseAmountIndex[selectedCase]];
                 gameOverView.ShowOwnCaseAmount(AmountTextOf(selectedCase));
+            }
 
             gameOverView.Visible = true;
             gameOverView.BringToFront();
