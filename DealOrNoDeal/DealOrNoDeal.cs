@@ -416,7 +416,10 @@ namespace DealOrNoDeal
             column.Dock = DockStyle.Fill;
             column.Margin = new Padding(0, 0, 6, 0);
             column.RowStyles.Clear();
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 190));
+            // Matches the offers card's height on the right for visual
+            // symmetry - see BuildRightColumn for why it needs to be this
+            // tall.
+            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 260));
             column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             Panel myCaseCard = BuildCard(AppLocalization.Get("Game.MyCaseLabel"), out Panel myCaseContent, out labelMyCaseTitle);
@@ -435,7 +438,12 @@ namespace DealOrNoDeal
             column.Dock = DockStyle.Fill;
             column.Margin = new Padding(6, 0, 0, 0);
             column.RowStyles.Clear();
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 190));
+            // Fixed (not percent-based) so this always has enough room for
+            // up to 8 accumulated banker offers regardless of window size -
+            // txtOfferLog has no scrollbar, so anything taller than this
+            // card would previously just get clipped off. 190 was only
+            // ever enough for about 5 lines.
+            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 260));
             column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             Panel offerCard = BuildCard(AppLocalization.Get("Game.OffersLabel"), out Panel offerContent, out labelOffersTitle);

@@ -12,6 +12,14 @@ namespace DealOrNoDeal
     /// </summary>
     public partial class ucFinalChoice : UserControl
     {
+        // Both cases reuse the same (fairly low-res) images as the 30-case
+        // grid - Dock=Fill previously stretched them to nearly half the
+        // screen, way past what that source resolution can hold without
+        // going blurry. A fixed size only a bit larger than the grid's own
+        // case size keeps them sharp.
+        private static readonly Size CaseSize = new Size(200, 200);
+        private const int CaseGap = 200;
+
         private readonly PictureBox pboxMyCase;
         private readonly PictureBox pboxRemainingCase;
         private readonly Label labelPrompt;
@@ -56,18 +64,18 @@ namespace DealOrNoDeal
             main.ColumnStyles.Clear();
             main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            TableLayoutPanel casePair = UIStyles.TableLayoutPanels.CreateStandard(2, 1);
-            casePair.Dock = DockStyle.Fill;
-            casePair.BackColor = Color.Transparent;
-            casePair.Padding = new Padding(140, 90, 140, 90);
-            casePair.ColumnStyles.Clear();
-            casePair.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            casePair.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            // FlowLayoutPanel (instead of two independent 50%-wide columns,
+            // which each centered their case far apart on wide windows)
+            // keeps both cases right next to each other, with the whole
+            // pair then centered as one unit via Anchor=None.
+            FlowLayoutPanel casePair = UIStyles.FlowLayoutPanels.CreateStandard();
+            casePair.FlowDirection = FlowDirection.LeftToRight;
+            casePair.Anchor = AnchorStyles.None;
 
             pboxMyCase = new PictureBox
             {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(70),
+                Size = CaseSize,
+                Margin = new Padding(0, 0, CaseGap, 0),
                 BackColor = Color.Transparent,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Cursor = Cursors.Hand
@@ -76,8 +84,8 @@ namespace DealOrNoDeal
 
             pboxRemainingCase = new PictureBox
             {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(70),
+                Size = CaseSize,
+                Margin = new Padding(0),
                 BackColor = Color.Transparent,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Cursor = Cursors.Hand,
@@ -85,8 +93,8 @@ namespace DealOrNoDeal
             };
             pboxRemainingCase.Click += PboxRemainingCase_Click;
 
-            casePair.Controls.Add(pboxMyCase, 0, 0);
-            casePair.Controls.Add(pboxRemainingCase, 1, 0);
+            casePair.Controls.Add(pboxMyCase);
+            casePair.Controls.Add(pboxRemainingCase);
 
             Panel hintPanel = UIStyles.Panels.CreateTransparent();
             hintPanel.Dock = DockStyle.Bottom;
