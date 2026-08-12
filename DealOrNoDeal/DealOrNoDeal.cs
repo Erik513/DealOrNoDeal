@@ -291,10 +291,11 @@ namespace DealOrNoDeal
                 languageCombo.Items.Add("Deutsch");
                 languageCombo.SelectedIndex = AppLocalization.Language == AppLanguage.German ? 1 : 0;
 
+                // Dollar first - matches English being the default language.
                 ComboBox currencyCombo = UIStyles.ComboBoxes.CreateStandard();
-                currencyCombo.Items.Add("Euro (€)");
                 currencyCombo.Items.Add("Dollar ($)");
-                currencyCombo.SelectedIndex = AppCurrencyFormatter.Currency == AppCurrency.Dollar ? 1 : 0;
+                currencyCombo.Items.Add("Euro (€)");
+                currencyCombo.SelectedIndex = AppCurrencyFormatter.Currency == AppCurrency.Euro ? 1 : 0;
 
                 optionsForm.PropertyTable.AddRow(AppLocalization.Get("Options.Language"), languageCombo);
                 optionsForm.PropertyTable.AddRow(AppLocalization.Get("Options.Currency"), currencyCombo);
@@ -311,7 +312,7 @@ namespace DealOrNoDeal
                     UIStyles.Language = selectedLanguage == AppLanguage.German
                         ? UILanguage.German
                         : UILanguage.English;
-                    AppCurrencyFormatter.Currency = currencyCombo.SelectedIndex == 1 ? AppCurrency.Dollar : AppCurrency.Euro;
+                    AppCurrencyFormatter.Currency = currencyCombo.SelectedIndex == 1 ? AppCurrency.Euro : AppCurrency.Dollar;
                     GameSettings.Save();
                 };
 
