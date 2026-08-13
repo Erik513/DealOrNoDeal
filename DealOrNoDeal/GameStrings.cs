@@ -26,6 +26,8 @@ namespace DealOrNoDeal
                 ["Game.MakeDecision"] = "Make your decision!",
                 ["Game.Over"] = "Game complete!",
 
+                ["App.AlreadyRunning"] = "Deal or No Deal is already running.",
+
                 ["GameOver.Prefix"] = "Your winnings:",
                 ["GameOver.Restart"] = "Restart",
                 ["GameOver.OwnCaseContained"] = "Your own case contained: {0}",
@@ -58,6 +60,8 @@ namespace DealOrNoDeal
                 ["Game.OpenMoreCases"] = "Öffne {0} Koffer bis zum Angebot des Bänkers!",
                 ["Game.MakeDecision"] = "Triff deine Entscheidung!",
                 ["Game.Over"] = "Spiel beendet!",
+
+                ["App.AlreadyRunning"] = "Deal or No Deal läuft bereits.",
 
                 ["GameOver.Prefix"] = "Dein Gewinn:",
                 ["GameOver.Restart"] = "Neu starten",
