@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>DealOrNoDeal</RootNamespace>
     <AssemblyName>DealOrNoDeal</AssemblyName>
+    <ApplicationIcon>Images\AppIcon.ico</ApplicationIcon>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
@@ -46,6 +47,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Images\CaseOpen.png">
       <LogicalName>DealOrNoDeal.CaseOpen.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Images\AppIconTitleBar.png">
+      <LogicalName>DealOrNoDeal.AppIconTitleBar.png</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

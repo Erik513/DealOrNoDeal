@@ -132,8 +132,18 @@ namespace DealOrNoDeal
         private string currentInfoTextKey;
         private object[] currentInfoTextArgs;
 
+        // Loaded for the custom title bar's icon - the taskbar/Alt-Tab icon
+        // comes from the exe's own embedded ApplicationIcon instead
+        // (StyledForm falls back to Icon.ExtractAssociatedIcon for that
+        // automatically, no code needed here).
+        private static Image LoadAppIcon()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DealOrNoDeal.AppIconTitleBar.png"))
+                return Image.FromStream(stream);
+        }
+
         public DealOrNoDeal()
-            : base(StyledFormOptions.CreateStandard("DealOrNoDeal"))
+            : base(StyledFormOptions.CreateStandard("DealOrNoDeal", titleTextAlign: ContentAlignment.MiddleLeft, icon: LoadAppIcon()))
         {
             InitializeComponent();
             InitializeCaseAmounts();
