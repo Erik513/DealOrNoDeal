@@ -332,6 +332,9 @@ namespace DealOrNoDeal
         {
             using (StyledOptionsForm optionsForm = new StyledOptionsForm(AppLocalization.Get("Options.Title")))
             {
+                optionsForm.SaveButtonText = AppLocalization.Get("Options.Save");
+                optionsForm.CancelButtonText = AppLocalization.Get("Options.Cancel");
+
                 ComboBox languageCombo = UIStyles.ComboBoxes.CreateStandard();
                 languageCombo.Items.Add("English");
                 languageCombo.Items.Add("Deutsch");

@@ -49,6 +49,8 @@ namespace DealOrNoDeal
                 ["Options.Title"] = "Options",
                 ["Options.Language"] = "Language",
                 ["Options.Currency"] = "Currency",
+                ["Options.Save"] = "Save",
+                ["Options.Cancel"] = "Cancel",
 
                 ["Game.ResetButton"] = "Reset game",
             });
@@ -88,6 +90,8 @@ namespace DealOrNoDeal
                 ["Options.Title"] = "Optionen",
                 ["Options.Language"] = "Sprache",
                 ["Options.Currency"] = "Währung",
+                ["Options.Save"] = "Speichern",
+                ["Options.Cancel"] = "Abbrechen",
 
                 ["Game.ResetButton"] = "Spiel zurücksetzen",
             });
