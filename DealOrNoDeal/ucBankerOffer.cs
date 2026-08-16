@@ -16,6 +16,7 @@ namespace DealOrNoDeal
         private readonly PictureBox pboxOfferImage;
         private readonly Label labelOfferHeading;
         private readonly Label labelOfferAmount;
+        private readonly Label labelCasesUntilNext;
         private readonly PictureBox pboxAcceptOffer;
         private readonly PictureBox pboxDeclineOffer;
 
@@ -24,6 +25,12 @@ namespace DealOrNoDeal
         // RefreshLanguage must only touch the placeholder, never overwrite
         // an actual offer amount with translated placeholder text.
         private bool hasRealOffer;
+
+        // Null means "this was the last offer, decline leads straight to
+        // the final choice" - remembered (like hasRealOffer above) so
+        // RefreshLanguage can rebuild the same hint in a new language.
+        private int? casesUntilNextOffer;
+        private bool hasCasesInfo;
 
         public event Action OfferDeclined;
         public event Action<string> OfferAccepted;
@@ -79,11 +86,38 @@ namespace DealOrNoDeal
             };
             pboxAcceptOffer.Click += PboxAcceptOffer_Click;
 
+            // AutoSize rows + AutoSize labels with Anchor=None (same
+            // vertical-centering idiom as ucGameOver) instead of Dock=Fill -
+            // that stretched the hint down to the whole cell's bottom edge,
+            // far below the amount instead of sitting right under it.
+            TableLayoutPanel amountCell = UIStyles.TableLayoutPanels.CreateStandard(1, 4);
+            amountCell.Dock = DockStyle.Fill;
+            amountCell.BackColor = Color.Transparent;
+            amountCell.RowStyles.Clear();
+            amountCell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            amountCell.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            amountCell.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            amountCell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            amountCell.ColumnStyles.Clear();
+            amountCell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
             labelOfferAmount = UIStyles.Labels.CreateTitle(AppLocalization.Get("BankerOffer.Placeholder"));
-            labelOfferAmount.Dock = DockStyle.Fill;
+            labelOfferAmount.AutoSize = true;
+            labelOfferAmount.Anchor = AnchorStyles.None;
             labelOfferAmount.TextAlign = ContentAlignment.MiddleCenter;
             labelOfferAmount.BackColor = Color.Transparent;
             labelOfferAmount.Font = new Font(UIStyles.Fonts.Title.FontFamily, 26f, FontStyle.Bold);
+
+            labelCasesUntilNext = UIStyles.Labels.CreateMuted("");
+            labelCasesUntilNext.AutoSize = true;
+            labelCasesUntilNext.Anchor = AnchorStyles.None;
+            labelCasesUntilNext.Margin = new Padding(0, 2, 0, 0);
+            labelCasesUntilNext.TextAlign = ContentAlignment.MiddleCenter;
+            labelCasesUntilNext.BackColor = Color.Transparent;
+            labelCasesUntilNext.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 11f);
+
+            amountCell.Controls.Add(labelOfferAmount, 0, 1);
+            amountCell.Controls.Add(labelCasesUntilNext, 0, 2);
 
             pboxDeclineOffer = new PictureBox
             {
@@ -97,7 +131,7 @@ namespace DealOrNoDeal
             pboxDeclineOffer.Click += PboxDeclineOffer_Click;
 
             actionBar.Controls.Add(pboxAcceptOffer, 0, 0);
-            actionBar.Controls.Add(labelOfferAmount, 1, 0);
+            actionBar.Controls.Add(amountCell, 1, 0);
             actionBar.Controls.Add(pboxDeclineOffer, 2, 0);
 
             main.Controls.Add(pboxOfferImage, 0, 0);
@@ -115,6 +149,19 @@ namespace DealOrNoDeal
         }
 
         /// <summary>
+        /// Small hint under the offer amount - either how many more cases
+        /// remain until the next offer, or (passing null) that this was the
+        /// final offer, since declining it leads straight to the final
+        /// keep-or-swap choice instead of another round of case-opening.
+        /// </summary>
+        public void SetCasesUntilNextOffer(int? casesUntilNext)
+        {
+            casesUntilNextOffer = casesUntilNext;
+            hasCasesInfo = true;
+            UpdateCasesUntilNextLabel();
+        }
+
+        /// <summary>
         /// Re-applies the current language's text - only the "Angebot"/
         /// "Offer" placeholder, never a real offer amount already showing.
         /// </summary>
@@ -122,6 +169,16 @@ namespace DealOrNoDeal
         {
             if (!hasRealOffer)
                 labelOfferAmount.Text = AppLocalization.Get("BankerOffer.Placeholder");
+
+            if (hasCasesInfo)
+                UpdateCasesUntilNextLabel();
+        }
+
+        private void UpdateCasesUntilNextLabel()
+        {
+            labelCasesUntilNext.Text = casesUntilNextOffer.HasValue
+                ? AppLocalization.Get("BankerOffer.CasesUntilNext", casesUntilNextOffer.Value)
+                : AppLocalization.Get("BankerOffer.FinalOffer");
         }
 
         private void PboxAcceptOffer_Click(object sender, EventArgs e)

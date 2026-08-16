@@ -806,6 +806,7 @@ namespace DealOrNoDeal
             }
 
             bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(offerValue));
+            bankerOfferView.SetCasesUntilNextOffer(CalculateCasesUntilNextOffer());
             offerHistoryValues.Insert(0, offerValue);
             RenderOfferLog();
         }
@@ -871,6 +872,22 @@ namespace DealOrNoDeal
             bankerOfferView.BringToFront();
             axBankerVideoPlayer.Visible = false;
             pboxOfferCover.Visible = false;
+        }
+
+        /// <summary>
+        /// How many more cases need to be opened before the next banker
+        /// offer - null on the very last offer (round 29), where declining
+        /// leads straight to the final keep-or-swap decision instead of
+        /// another round of case-opening.
+        /// </summary>
+        private int? CalculateCasesUntilNextOffer()
+        {
+            int nextRoundThreshold = BankerOfferPercentageByRound.Keys
+                .Where(round => round > casesClicked)
+                .DefaultIfEmpty(-1)
+                .Min();
+
+            return nextRoundThreshold == -1 ? (int?)null : nextRoundThreshold - casesClicked;
         }
 
         private void CenterOwnCaseDisplay()

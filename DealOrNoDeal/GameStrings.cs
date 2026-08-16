@@ -33,6 +33,8 @@ namespace DealOrNoDeal
                 ["GameOver.OwnCaseContained"] = "Your own case contained: {0}",
 
                 ["BankerOffer.Placeholder"] = "Offer",
+                ["BankerOffer.CasesUntilNext"] = "({0} cases until the next offer)",
+                ["BankerOffer.FinalOffer"] = "(final offer)",
 
                 ["FinalChoice.Prompt"] = "Keep or swap your case?",
                 ["FinalChoice.Keep"] = "Keep",
@@ -68,6 +70,8 @@ namespace DealOrNoDeal
                 ["GameOver.OwnCaseContained"] = "Dein eigener Koffer enthielt: {0}",
 
                 ["BankerOffer.Placeholder"] = "Angebot",
+                ["BankerOffer.CasesUntilNext"] = "({0} Koffer bis zum nächsten Angebot)",
+                ["BankerOffer.FinalOffer"] = "(letztes Angebot)",
 
                 ["FinalChoice.Prompt"] = "Koffer behalten oder tauschen?",
                 ["FinalChoice.Keep"] = "Behalten",
