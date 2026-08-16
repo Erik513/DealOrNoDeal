@@ -95,7 +95,9 @@ namespace DealOrNoDeal
             labelClickToClose.Dock = DockStyle.Fill;
             labelClickToClose.TextAlign = ContentAlignment.MiddleCenter;
             labelClickToClose.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 12.75f);
-            labelClickToClose.ForeColor = UIStyles.Colors.YellowLighter;
+            // Plain gray, not gold - matches the same "click to skip" hint
+            // on the banker-offer screen for a consistent look.
+            labelClickToClose.ForeColor = UIStyles.Colors.TextMuted;
             labelClickToClose.Click += UcOpenCase_Click;
 
             panelClosePrompt = UIStyles.Panels.CreateTransparent();

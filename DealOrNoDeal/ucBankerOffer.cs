@@ -19,6 +19,10 @@ namespace DealOrNoDeal
         private readonly Label labelCasesUntilNext;
         private readonly PictureBox pboxAcceptOffer;
         private readonly PictureBox pboxDeclineOffer;
+        private readonly Panel panelCalculating;
+        private readonly Label labelCalculating;
+        private readonly Label labelCalculatingSkipHint;
+        private readonly Timer revealTimer;
 
         // Whether labelOfferAmount currently shows a real offer (set from
         // outside via SetOfferAmountText) rather than the placeholder text -
@@ -32,8 +36,21 @@ namespace DealOrNoDeal
         private int? casesUntilNextOffer;
         private bool hasCasesInfo;
 
+        // Guards against both the timer and a click firing the reveal -
+        // whichever happens first wins, the other must be a no-op.
+        private bool revealed;
+
         public event Action OfferDeclined;
         public event Action<string> OfferAccepted;
+
+        /// <summary>
+        /// Fires once the accept/decline choice actually becomes usable -
+        /// either the reveal delay ran out or the player clicked to skip
+        /// it. The caller uses this to switch its own "banker is
+        /// calculating" status text over to "accept or continue?", since
+        /// before this fires the buttons underneath are still hidden.
+        /// </summary>
+        public event Action OfferRevealed;
 
         public ucBankerOffer()
         {
@@ -134,10 +151,97 @@ namespace DealOrNoDeal
             actionBar.Controls.Add(amountCell, 1, 0);
             actionBar.Controls.Add(pboxDeclineOffer, 2, 0);
 
+            // Covers actionBar (both Dock=Fill, stacked in the same plain
+            // Panel instead of a shared TableLayoutPanel cell - the same
+            // "intentionally overlap" trick DealOrNoDeal.cs already uses
+            // for pboxOfferCover/txtOfferLog) so the accept/decline choice
+            // stays hidden - and unclickable - until the reveal delay is
+            // over or the player clicks to skip it.
+            labelCalculating = UIStyles.Labels.CreateTitle(AppLocalization.Get("Game.BankerCalculating"));
+            labelCalculating.AutoSize = true;
+            labelCalculating.Anchor = AnchorStyles.None;
+            labelCalculating.TextAlign = ContentAlignment.MiddleCenter;
+            labelCalculating.BackColor = Color.Transparent;
+            labelCalculating.Font = new Font(UIStyles.Fonts.Title.FontFamily, 20f, FontStyle.Bold);
+
+            TableLayoutPanel calculatingLayout = UIStyles.TableLayoutPanels.CreateStandard(1, 3);
+            calculatingLayout.Dock = DockStyle.Fill;
+            calculatingLayout.BackColor = Color.Transparent;
+            calculatingLayout.RowStyles.Clear();
+            calculatingLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            calculatingLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            calculatingLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            calculatingLayout.ColumnStyles.Clear();
+            calculatingLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            calculatingLayout.Controls.Add(labelCalculating, 0, 1);
+
+            // Same footer style/position as ucOpenCase's "click to
+            // skip"/"click to close" prompt - plain gray, docked to the
+            // very bottom of the control - instead of sitting right under
+            // the calculating text like a caption.
+            labelCalculatingSkipHint = UIStyles.Labels.CreateNormal(AppLocalization.Get("BankerOffer.ClickToSkip"));
+            labelCalculatingSkipHint.Dock = DockStyle.Bottom;
+            labelCalculatingSkipHint.Height = 32;
+            labelCalculatingSkipHint.TextAlign = ContentAlignment.MiddleCenter;
+            labelCalculatingSkipHint.BackColor = Color.Transparent;
+            labelCalculatingSkipHint.ForeColor = UIStyles.Colors.TextMuted;
+            labelCalculatingSkipHint.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 11f);
+
+            panelCalculating = UIStyles.Panels.CreateElevated();
+            panelCalculating.Dock = DockStyle.Fill;
+            // Same plain gray as ucOpenCase's own background - olive made
+            // the gray "click to skip" hint hard to read (too little
+            // contrast between the two).
+            panelCalculating.BackColor = UIStyles.Colors.BackgroundMediumElevated;
+            panelCalculating.Cursor = Cursors.Hand;
+            panelCalculating.Controls.Add(calculatingLayout);
+            panelCalculating.Controls.Add(labelCalculatingSkipHint);
+            panelCalculating.Click += (s, e) => RevealOffer();
+            calculatingLayout.Click += (s, e) => RevealOffer();
+            labelCalculating.Click += (s, e) => RevealOffer();
+            labelCalculatingSkipHint.Click += (s, e) => RevealOffer();
+
+            Panel actionBarHost = UIStyles.Panels.CreateTransparent();
+            actionBarHost.Dock = DockStyle.Fill;
+            actionBarHost.Controls.Add(actionBar);
+            actionBarHost.Controls.Add(panelCalculating);
+            panelCalculating.BringToFront();
+
+            revealTimer = new Timer();
+            revealTimer.Tick += (s, e) => RevealOffer();
+
             main.Controls.Add(pboxOfferImage, 0, 0);
-            main.Controls.Add(actionBar, 0, 1);
+            main.Controls.Add(actionBarHost, 0, 1);
 
             Controls.Add(main);
+        }
+
+        /// <summary>
+        /// Starts (or restarts) the suspense delay before the accept/decline
+        /// choice becomes visible and usable - call after SetOfferAmountText
+        /// and SetCasesUntilNextOffer so they're already showing the moment
+        /// the reveal happens, whether that's from the timer or a skip click.
+        /// </summary>
+        public void BeginRevealDelay(int delayMs)
+        {
+            revealed = false;
+            panelCalculating.Visible = true;
+            panelCalculating.BringToFront();
+
+            revealTimer.Stop();
+            revealTimer.Interval = Math.Max(1, delayMs);
+            revealTimer.Start();
+        }
+
+        private void RevealOffer()
+        {
+            if (revealed)
+                return;
+
+            revealed = true;
+            revealTimer.Stop();
+            panelCalculating.Visible = false;
+            OfferRevealed?.Invoke();
         }
 
         public void SetOfferAmountText(string offer)
@@ -172,6 +276,9 @@ namespace DealOrNoDeal
 
             if (hasCasesInfo)
                 UpdateCasesUntilNextLabel();
+
+            labelCalculating.Text = AppLocalization.Get("Game.BankerCalculating");
+            labelCalculatingSkipHint.Text = AppLocalization.Get("BankerOffer.ClickToSkip");
         }
 
         private void UpdateCasesUntilNextLabel()

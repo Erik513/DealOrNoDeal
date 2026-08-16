@@ -47,6 +47,17 @@ namespace DealOrNoDeal
             { 29, 0.95m }
         };
 
+        /// <summary>
+        /// Suspense delay (indexed by offer round, in the same order as
+        /// BankerOfferPercentageByRound) before the accept/decline choice
+        /// becomes usable - short for the first offer, longer for later
+        /// ones, since by then there's more at stake and the moment
+        /// deserves to breathe more. Skippable by clicking (see
+        /// ucBankerOffer.BeginRevealDelay), so this is a ceiling on the
+        /// wait, not a forced one.
+        /// </summary>
+        private static readonly int[] BankerOfferRevealDelaysMs = { 1500, 2250, 3000, 3750, 4500, 5250, 6000, 6000 };
+
         private readonly List<PictureBox> caseList = new List<PictureBox>();
         private readonly List<Button> buttonList = new List<Button>();
 
@@ -153,6 +164,7 @@ namespace DealOrNoDeal
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
             bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, "#,0.00");
+            bankerOfferView.OfferRevealed += () => SetInfoText("Game.AcceptOrContinue");
             caseOpeningView.AnimationCompleted += CaseOpeningView_AnimationCompleted;
             caseOpeningView.CaseOpenedCompleted += CaseOpeningView_CaseOpenedCompleted;
             finalChoiceView.KeepMyCaseClicked += (s, e) => RevealFinalCase(selectedCase);
@@ -780,7 +792,7 @@ namespace DealOrNoDeal
         public void ShowBankerOffer(decimal offerValue)
         {
             currentOfferAmount = offerValue;
-            SetInfoText("Game.BankerCalculating");
+            SetInfoText("Game.YourOffer");
 
             bool videoExists = File.Exists(videoPath);
 
@@ -799,16 +811,24 @@ namespace DealOrNoDeal
             {
                 // No banker video found on this machine - jump straight to
                 // the offer instead of waiting on a video event that never
-                // fires.
-                SetInfoText("Game.AcceptOrContinue");
+                // fires. labelInfoText stays on "Game.YourOffer" (set
+                // above) until OfferRevealed actually fires.
                 bankerOfferView.Visible = true;
                 bankerOfferView.BringToFront();
             }
 
             bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(offerValue));
             bankerOfferView.SetCasesUntilNextOffer(CalculateCasesUntilNextOffer());
+            bankerOfferView.BeginRevealDelay(CalculateOfferRevealDelayMs());
             offerHistoryValues.Insert(0, offerValue);
             RenderOfferLog();
+        }
+
+        private int CalculateOfferRevealDelayMs()
+        {
+            List<int> sortedRounds = BankerOfferPercentageByRound.Keys.OrderBy(round => round).ToList();
+            int roundIndex = sortedRounds.IndexOf(casesClicked);
+            return BankerOfferRevealDelaysMs[Math.Max(0, roundIndex)];
         }
 
         /// <summary>
@@ -867,7 +887,8 @@ namespace DealOrNoDeal
 
         private void ShowOfferAfterVideo()
         {
-            SetInfoText("Game.AcceptOrContinue");
+            // labelInfoText stays on "Game.YourOffer" (set at the top of
+            // ShowBankerOffer) until OfferRevealed actually fires.
             bankerOfferView.Visible = true;
             bankerOfferView.BringToFront();
             axBankerVideoPlayer.Visible = false;

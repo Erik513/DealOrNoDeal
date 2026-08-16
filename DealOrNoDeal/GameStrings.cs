@@ -21,6 +21,7 @@ namespace DealOrNoDeal
                 ["Game.MyCaseLabel"] = "My Case:",
                 ["Game.OffersLabel"] = "Offers:",
                 ["Game.BankerCalculating"] = "The banker is calculating!",
+                ["Game.YourOffer"] = "Your offer",
                 ["Game.AcceptOrContinue"] = "Accept the offer, or keep going?",
                 ["Game.OpenMoreCases"] = "Open {0} more cases until the banker's offer!",
                 ["Game.MakeDecision"] = "Make your decision!",
@@ -34,14 +35,15 @@ namespace DealOrNoDeal
 
                 ["BankerOffer.Placeholder"] = "Offer",
                 ["BankerOffer.CasesUntilNext"] = "({0} cases until the next offer)",
-                ["BankerOffer.FinalOffer"] = "(final offer)",
+                ["BankerOffer.FinalOffer"] = "(last offer)",
+                ["BankerOffer.ClickToSkip"] = "Click to skip",
 
                 ["FinalChoice.Prompt"] = "Keep or swap your case?",
                 ["FinalChoice.Keep"] = "Keep",
                 ["FinalChoice.Swap"] = "Swap",
 
-                ["OpenCase.ClickToSkip"] = "Click to skip!",
-                ["OpenCase.ClickToClose"] = "Click to close!",
+                ["OpenCase.ClickToSkip"] = "Click to skip",
+                ["OpenCase.ClickToClose"] = "Click to close",
 
                 ["Options.MenuButton"] = "Options",
                 ["Options.Title"] = "Options",
@@ -58,6 +60,7 @@ namespace DealOrNoDeal
                 ["Game.MyCaseLabel"] = "Mein Koffer:",
                 ["Game.OffersLabel"] = "Angebote:",
                 ["Game.BankerCalculating"] = "Der Bänker rechnet!",
+                ["Game.YourOffer"] = "Dein Angebot",
                 ["Game.AcceptOrContinue"] = "Angebot annehmen oder weiter ins Risiko?",
                 ["Game.OpenMoreCases"] = "Öffne {0} Koffer bis zum Angebot des Bänkers!",
                 ["Game.MakeDecision"] = "Triff deine Entscheidung!",
@@ -72,13 +75,14 @@ namespace DealOrNoDeal
                 ["BankerOffer.Placeholder"] = "Angebot",
                 ["BankerOffer.CasesUntilNext"] = "({0} Koffer bis zum nächsten Angebot)",
                 ["BankerOffer.FinalOffer"] = "(letztes Angebot)",
+                ["BankerOffer.ClickToSkip"] = "Klicken zum Überspringen",
 
                 ["FinalChoice.Prompt"] = "Koffer behalten oder tauschen?",
                 ["FinalChoice.Keep"] = "Behalten",
                 ["FinalChoice.Swap"] = "Tauschen",
 
-                ["OpenCase.ClickToSkip"] = "Klicken zum Überspringen!",
-                ["OpenCase.ClickToClose"] = "Klicken zum Schließen!",
+                ["OpenCase.ClickToSkip"] = "Klicken zum Überspringen",
+                ["OpenCase.ClickToClose"] = "Klicken zum Schließen",
 
                 ["Options.MenuButton"] = "Optionen",
                 ["Options.Title"] = "Optionen",
