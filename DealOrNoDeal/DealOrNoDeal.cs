@@ -296,7 +296,7 @@ namespace DealOrNoDeal
 
             foreach (Button amountButton in buttonList)
             {
-                amountButton.BackColor = Color.Yellow;
+                SetAmountButtonColor(amountButton, Color.Yellow);
                 amountButton.Enabled = true;
             }
 
@@ -698,16 +698,30 @@ namespace DealOrNoDeal
                 amountButton.Margin = new Padding(4);
                 amountButton.TabStop = false;
                 amountButton.Cursor = Cursors.Default;
-                amountButton.BackColor = Color.Yellow;
                 amountButton.ForeColor = Color.Black;
-                amountButton.FlatAppearance.MouseOverBackColor = Color.Yellow;
-                amountButton.FlatAppearance.MouseDownBackColor = Color.Yellow;
+                SetAmountButtonColor(amountButton, Color.Yellow);
 
                 strip.Controls.Add(amountButton, 0, i);
                 buttonList.Add(amountButton);
             }
 
             return strip;
+        }
+
+        /// <summary>
+        /// Sets an amount button's color and keeps its hover/mouse-down
+        /// colors identical to it - these buttons are purely informational
+        /// (TabStop=false, Cursor=Default), so hovering one must never
+        /// visibly change it. Without this, a button's hover color stayed
+        /// fixed at whatever it was set to when the button was first built
+        /// (yellow), so an already-opened, olive-colored amount would flash
+        /// back to yellow on mouseover.
+        /// </summary>
+        private static void SetAmountButtonColor(Button amountButton, Color color)
+        {
+            amountButton.BackColor = color;
+            amountButton.FlatAppearance.MouseOverBackColor = color;
+            amountButton.FlatAppearance.MouseDownBackColor = color;
         }
 
         /// <summary>
@@ -905,7 +919,7 @@ namespace DealOrNoDeal
 
         private void CaseOpeningView_AnimationCompleted(object sender, EventArgs e)
         {
-            lastOpenedButton.BackColor = Color.Olive;
+            SetAmountButtonColor(lastOpenedButton, Color.Olive);
         }
 
         private void CaseOpeningView_CaseOpenedCompleted(object sender, EventArgs e)
@@ -1015,7 +1029,7 @@ namespace DealOrNoDeal
             foreach (Button amountButton in buttonList)
             {
                 if (amountButton.Text != wonAmount)
-                    amountButton.BackColor = Color.Olive;
+                    SetAmountButtonColor(amountButton, Color.Olive);
             }
 
             bankerOfferView.Visible = false;
