@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -66,6 +67,16 @@ namespace DealOrNoDeal
         // properties such as Tag or BackColor.
         private readonly Dictionary<PictureBox, int> caseAmountIndex = new Dictionary<PictureBox, int>();
 
+        // Each case's number (1-30, already printed on the case artwork
+        // itself) - used to say which case was cashed in at the end of a
+        // game, in the home screen's history table.
+        private readonly Dictionary<PictureBox, int> caseNumbers = new Dictionary<PictureBox, int>();
+
+        // Shown in the history table instead of a case number when the
+        // game ended by accepting a banker offer - deliberately left
+        // untranslated, same as "Deal Or No Deal ?" itself.
+        private const string DealResultLabel = "Deal";
+
         // Indices of the amounts that haven't been revealed yet - basis for
         // the banker's offer average calculation.
         private readonly HashSet<int> remainingAmountIndices = new HashSet<int>();
@@ -119,6 +130,7 @@ namespace DealOrNoDeal
         // of continuing the normal open-more-cases flow once it's dismissed.
         private string pendingFinalResultAmount;
         private decimal pendingFinalResultValue;
+        private string pendingFinalResultLabel;
 
         // True only when the game ended by keeping the original case - in
         // that case its content IS the winnings already shown, so the
@@ -163,7 +175,7 @@ namespace DealOrNoDeal
             selectedCase = null;
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
-            bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, "#,0.00");
+            bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, "#,0.00", DealResultLabel);
             bankerOfferView.OfferRevealed += () => SetInfoText("Game.AcceptOrContinue");
             caseOpeningView.AnimationCompleted += CaseOpeningView_AnimationCompleted;
             caseOpeningView.CaseOpenedCompleted += CaseOpeningView_CaseOpenedCompleted;
@@ -263,6 +275,7 @@ namespace DealOrNoDeal
             endedByKeepingOwnCase = caseBox == selectedCase;
             pendingFinalResultAmount = AmountTextOf(caseBox);
             pendingFinalResultValue = CaseAmountValues[caseAmountIndex[caseBox]];
+            pendingFinalResultLabel = caseNumbers[caseBox].ToString(CultureInfo.InvariantCulture);
             caseOpeningView.SlowReveal = true;
             caseOpeningView.SetCaseAmount(pendingFinalResultAmount);
             caseOpeningView.Visible = true;
@@ -282,6 +295,7 @@ namespace DealOrNoDeal
             lastOpenedButton = null;
             lastRemainingCase = null;
             pendingFinalResultAmount = null;
+            pendingFinalResultLabel = null;
             endedByKeepingOwnCase = false;
             IsGameOver = false;
 
@@ -670,6 +684,11 @@ namespace DealOrNoDeal
                 };
                 caseBox.Click += Case_Click;
 
+                // The case artwork itself already prints a large number on
+                // every case - no need for a separate visible badge, just
+                // the internal lookup for the history table.
+                caseNumbers[caseBox] = i;
+
                 int index = i - 1;
                 int col = index % 5;
                 int row = index / 5;
@@ -791,7 +810,8 @@ namespace DealOrNoDeal
         {
             homeScreenView.SetRecords(
                 GameSettings.HighestAmount,
-                GameSettings.HighestAmountDate);
+                GameSettings.HighestAmountDate,
+                GameSettings.HighestAmountResultLabel);
             homeScreenView.SetHistory(GameHistory.Entries);
         }
 
@@ -929,7 +949,11 @@ namespace DealOrNoDeal
 
         private void Case_Click(object sender, EventArgs e)
         {
-            PictureBox clickedCase = (PictureBox)sender;
+            HandleCaseClicked((PictureBox)sender);
+        }
+
+        private void HandleCaseClicked(PictureBox clickedCase)
+        {
             casesClicked += 1;
 
             if (selectedCase == null)
@@ -972,8 +996,10 @@ namespace DealOrNoDeal
             {
                 string resultAmount = pendingFinalResultAmount;
                 decimal resultValue = pendingFinalResultValue;
+                string resultLabel = pendingFinalResultLabel;
                 pendingFinalResultAmount = null;
-                EndGame(resultAmount, resultValue, "#,0");
+                pendingFinalResultLabel = null;
+                EndGame(resultAmount, resultValue, "#,0", resultLabel);
                 return;
             }
 
@@ -1051,7 +1077,7 @@ namespace DealOrNoDeal
         /// Ends the game unambiguously - whether by accepting a banker's
         /// offer, or by keeping/swapping the case at the very end.
         /// </summary>
-        private void EndGame(string wonAmount, decimal wonAmountValue, string wonAmountFormat)
+        private void EndGame(string wonAmount, decimal wonAmountValue, string wonAmountFormat, string resultLabel)
         {
             if (IsGameOver)
                 return;
@@ -1064,10 +1090,11 @@ namespace DealOrNoDeal
             {
                 GameSettings.HighestAmount = wonAmountValue;
                 GameSettings.HighestAmountDate = DateTime.Now;
+                GameSettings.HighestAmountResultLabel = resultLabel;
             }
 
             GameSettings.Save();
-            GameHistory.Record(wonAmountValue);
+            GameHistory.Record(wonAmountValue, resultLabel);
             RefreshHomeScreenRecords();
 
             foreach (PictureBox caseBox in caseList)

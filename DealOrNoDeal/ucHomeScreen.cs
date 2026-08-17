@@ -30,6 +30,7 @@ namespace DealOrNoDeal
         private static readonly Size PlayButtonSize = new Size(RightColumnWidth, 70);
 
         private const int HistoryDateColumnWidth = 170;
+        private const int HistoryCaseColumnWidth = 100;
         private const int HistoryResultColumnWidth = 140;
 
         // Fixed gap between the history block and the right-hand block so
@@ -75,6 +76,7 @@ namespace DealOrNoDeal
         private readonly Label labelInstructionsBody;
         private readonly Label labelSettingsTitle;
         private readonly Label labelAllTimeBestName;
+        private readonly Label labelAllTimeBestCase;
         private readonly Label labelAllTimeBestAmount;
         private readonly StyledDataTable historyTable;
         private readonly StyledPropertyTable settingsTable;
@@ -85,7 +87,9 @@ namespace DealOrNoDeal
 
         private decimal? highestAmount;
         private DateTime? highestAmountDate;
-        private List<(DateTime Date, decimal Amount)> historyEntries = new List<(DateTime, decimal)>();
+        private string highestAmountResultLabel;
+        private List<(DateTime Date, decimal Amount, string ResultLabel)> historyEntries =
+            new List<(DateTime, decimal, string)>();
 
         public event EventHandler PlayClicked;
 
@@ -139,14 +143,15 @@ namespace DealOrNoDeal
             historyTable.RowFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize);
             historyTable.HeaderFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableHeaderFontSize, FontStyle.Bold);
             historyTable.SetColumns(
-                new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.ResultColumn") },
-                new[] { HistoryDateColumnWidth, HistoryResultColumnWidth });
+                new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.CaseColumn"), AppLocalization.Get("Home.ResultColumn") },
+                new[] { HistoryDateColumnWidth, HistoryCaseColumnWidth, HistoryResultColumnWidth });
 
             labelHistoryTitle = CreateTableTitleLabel(AppLocalization.Get("Home.HistoryTitle"));
 
-            (Control historyWithAllTimeBest, Label allTimeBestName, Label allTimeBestAmount) =
+            (Control historyWithAllTimeBest, Label allTimeBestName, Label allTimeBestCase, Label allTimeBestAmount) =
                 CreateHistoryTableWithAllTimeBest();
             labelAllTimeBestName = allTimeBestName;
+            labelAllTimeBestCase = allTimeBestCase;
             labelAllTimeBestAmount = allTimeBestAmount;
 
             labelAllTimeBestName.Text = AppLocalization.Get("Home.AllTimeBestRow");
@@ -274,16 +279,18 @@ namespace DealOrNoDeal
 
         public void SetRecords(
             decimal? highestAmountValue,
-            DateTime? highestAmountDateValue)
+            DateTime? highestAmountDateValue,
+            string highestAmountResultLabelValue)
         {
             highestAmount = highestAmountValue;
             highestAmountDate = highestAmountDateValue;
+            highestAmountResultLabel = highestAmountResultLabelValue;
             RefreshCurrency();
         }
 
-        public void SetHistory(IEnumerable<(DateTime Date, decimal Amount)> entries)
+        public void SetHistory(IEnumerable<(DateTime Date, decimal Amount, string ResultLabel)> entries)
         {
-            historyEntries = entries?.ToList() ?? new List<(DateTime, decimal)>();
+            historyEntries = entries?.ToList() ?? new List<(DateTime, decimal, string)>();
             RefreshCurrency();
         }
 
@@ -296,20 +303,22 @@ namespace DealOrNoDeal
             labelSettingsTitle.Text = AppLocalization.Get("Home.SettingsTitle");
             labelAllTimeBestName.Text = AppLocalization.Get("Home.AllTimeBestRow");
             historyTable.SetColumns(
-                new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.ResultColumn") },
-                new[] { HistoryDateColumnWidth, HistoryResultColumnWidth });
+                new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.CaseColumn"), AppLocalization.Get("Home.ResultColumn") },
+                new[] { HistoryDateColumnWidth, HistoryCaseColumnWidth, HistoryResultColumnWidth });
             RebuildSettingsRows();
             RefreshCurrency();
         }
 
         public void RefreshCurrency()
         {
+            labelAllTimeBestCase.Text = highestAmountResultLabel ?? "";
             labelAllTimeBestAmount.Text = FormatOrPlaceholder(highestAmount);
 
             string dateTooltip = highestAmountDate.HasValue
                 ? highestAmountDate.Value.ToString("yyyy-MM-dd HH:mm")
                 : "";
             allTimeBestToolTip.SetToolTip(labelAllTimeBestName, dateTooltip);
+            allTimeBestToolTip.SetToolTip(labelAllTimeBestCase, dateTooltip);
             allTimeBestToolTip.SetToolTip(labelAllTimeBestAmount, dateTooltip);
 
             // Always exactly HistoryDisplayRowCount rows - real entries
@@ -318,10 +327,11 @@ namespace DealOrNoDeal
             IEnumerable<string[]> historyRows = historyEntries.Select(entry => new[]
             {
                 entry.Date.ToString("yyyy-MM-dd HH:mm"),
+                entry.ResultLabel,
                 AppCurrencyFormatter.Format(entry.Amount, "#,0")
             });
             IEnumerable<string[]> blankPadding = Enumerable
-                .Repeat(new[] { string.Empty, string.Empty }, Math.Max(0, HistoryDisplayRowCount - historyEntries.Count));
+                .Repeat(new[] { string.Empty, string.Empty, string.Empty }, Math.Max(0, HistoryDisplayRowCount - historyEntries.Count));
             historyTable.SetRows(historyRows.Concat(blankPadding));
         }
 
@@ -439,7 +449,7 @@ namespace DealOrNoDeal
         /// cap the way the regular history rows are) with its value in
         /// yellow so it stands out from the rest of the table.
         /// </summary>
-        private (Control Wrapper, Label NameLabel, Label AmountLabel) CreateHistoryTableWithAllTimeBest()
+        private (Control Wrapper, Label NameLabel, Label CaseLabel, Label AmountLabel) CreateHistoryTableWithAllTimeBest()
         {
             TableLayoutPanel wrapper = new TableLayoutPanel
             {
@@ -464,10 +474,11 @@ namespace DealOrNoDeal
                 Anchor = AnchorStyles.None,
                 BackColor = Color.Transparent,
                 Margin = new Padding(0),
-                ColumnCount = 2,
+                ColumnCount = 3,
                 RowCount = 1
             };
             bestRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, HistoryDateColumnWidth));
+            bestRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, HistoryCaseColumnWidth));
             bestRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, HistoryResultColumnWidth));
             bestRow.RowStyles.Add(new RowStyle(SizeType.Absolute, TableRowHeight));
 
@@ -479,7 +490,7 @@ namespace DealOrNoDeal
                 Padding = new Padding(8, 0, 8, 0),
                 Margin = new Padding(0),
                 Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize),
-                ForeColor = UIStyles.Colors.TextPrimary,
+                ForeColor = UIStyles.Colors.YellowLighter,
                 BackColor = historyTable.RowBackColor,
                 AutoEllipsis = true
             };
@@ -497,12 +508,26 @@ namespace DealOrNoDeal
                 AutoEllipsis = true
             };
 
+            Label caseLabel = new Label
+            {
+                Text = NoRecordYetPlaceholder,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 8, 0),
+                Margin = new Padding(0),
+                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize),
+                ForeColor = UIStyles.Colors.YellowLighter,
+                BackColor = historyTable.RowBackColor,
+                AutoEllipsis = true
+            };
+
             bestRow.Controls.Add(nameLabel, 0, 0);
-            bestRow.Controls.Add(amountLabel, 1, 0);
+            bestRow.Controls.Add(caseLabel, 1, 0);
+            bestRow.Controls.Add(amountLabel, 2, 0);
 
             wrapper.Controls.Add(bestRow, 0, 1);
 
-            return (wrapper, nameLabel, amountLabel);
+            return (wrapper, nameLabel, caseLabel, amountLabel);
         }
 
         private static string FormatOrPlaceholder(decimal? amount)

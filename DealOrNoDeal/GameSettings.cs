@@ -31,6 +31,12 @@ namespace DealOrNoDeal
         // just another history entry.
         public static DateTime? HighestAmountDate { get; set; }
 
+        // How that game ended - "Deal" for an accepted banker offer, or a
+        // case number for keeping/swapping to the end. Same value that
+        // would appear in that game's history row, kept alongside the
+        // record since history itself only holds the last 20 games.
+        public static string HighestAmountResultLabel { get; set; }
+
         /// <summary>
         /// Loads saved settings into AppLocalization/AppCurrencyFormatter.
         /// Call once at startup, before building any UI. Missing or
@@ -75,6 +81,8 @@ namespace DealOrNoDeal
                         HighestAmount = amount;
                     else if (key == "HighestAmountDate" && DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out date))
                         HighestAmountDate = date;
+                    else if (key == "HighestAmountResultLabel")
+                        HighestAmountResultLabel = value;
                 }
             }
             catch
@@ -100,6 +108,9 @@ namespace DealOrNoDeal
 
                 if (HighestAmountDate.HasValue)
                     lines.Add("HighestAmountDate=" + HighestAmountDate.Value.ToString("o", CultureInfo.InvariantCulture));
+
+                if (!string.IsNullOrEmpty(HighestAmountResultLabel))
+                    lines.Add("HighestAmountResultLabel=" + HighestAmountResultLabel);
 
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
                 File.WriteAllLines(FilePath, lines);
