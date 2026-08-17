@@ -19,6 +19,11 @@ namespace DealOrNoDeal
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            // Black/yellow, not CustomWFUI's default blue - has to happen
+            // before any control is built, since a few of them only read
+            // their accent color once at construction time.
+            UIStyles.Colors.SetAccent(UIStyles.Colors.YellowLighter);
+
             GameStrings.Register();
             GameSettings.Load();
             GameHistory.Load();

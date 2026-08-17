@@ -215,7 +215,7 @@ namespace DealOrNoDeal
             Control settingsBlock = CreateTitledTable(labelSettingsTitle, settingsTable);
             settingsBlock.Margin = new Padding(0, 0, 0, RightColumnItemGap);
 
-            btnPlay = UIStyles.Buttons.CreateGreen(AppLocalization.Get("Home.PlayButton"), size: PlayButtonSize);
+            btnPlay = UIStyles.Buttons.CreatePrimary(AppLocalization.Get("Home.PlayButton"), size: PlayButtonSize);
             btnPlay.Margin = new Padding(0);
             btnPlay.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 15f, FontStyle.Bold);
             btnPlay.Anchor = AnchorStyles.Top | AnchorStyles.Right;
