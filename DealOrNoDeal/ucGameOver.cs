@@ -19,12 +19,14 @@ namespace DealOrNoDeal
         private readonly Label labelAmount;
         private readonly Label labelOwnCase;
         private readonly Button btnRestart;
+        private readonly Button btnMainMenu;
 
         // Remembered so RefreshLanguage can rebuild the "...contained: {0}"
         // sentence in the new language without losing the amount.
         private string ownCaseAmountText;
 
         public event EventHandler RestartClicked;
+        public event EventHandler MainMenuClicked;
 
         public ucGameOver()
         {
@@ -78,16 +80,31 @@ namespace DealOrNoDeal
             labelOwnCase.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 15f);
             labelOwnCase.Margin = new Padding(0, 20, 0, 0);
 
-            btnRestart = UIStyles.Buttons.CreateGreen(AppLocalization.Get("GameOver.Restart"));
-            btnRestart.Anchor = AnchorStyles.None;
-            btnRestart.Size = new Size(280, 64);
+            // FlowLayoutPanel + Anchor=None (AutoSize=true by default, see
+            // UIFlowLayoutPanelFactory) centers the whole button pair as
+            // one unit - same technique ucFinalChoice/ucHomeScreen use for
+            // their own button pairs.
+            FlowLayoutPanel buttonRow = UIStyles.FlowLayoutPanels.CreateStandard();
+            buttonRow.FlowDirection = FlowDirection.LeftToRight;
+            buttonRow.Anchor = AnchorStyles.None;
+
+            btnMainMenu = UIStyles.Buttons.CreateStandard(AppLocalization.Get("GameOver.MainMenu"), size: new Size(200, 64));
+            btnMainMenu.Margin = new Padding(0, 0, 20, 0);
+            btnMainMenu.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 16f, FontStyle.Bold);
+            btnMainMenu.Click += (s, e) => MainMenuClicked?.Invoke(this, EventArgs.Empty);
+
+            btnRestart = UIStyles.Buttons.CreateGreen(AppLocalization.Get("GameOver.Restart"), size: new Size(200, 64));
+            btnRestart.Margin = new Padding(0);
             btnRestart.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 16f, FontStyle.Bold);
             btnRestart.Click += (s, e) => RestartClicked?.Invoke(this, EventArgs.Empty);
+
+            buttonRow.Controls.Add(btnMainMenu);
+            buttonRow.Controls.Add(btnRestart);
 
             main.Controls.Add(labelPrefix, 0, 1);
             main.Controls.Add(labelAmount, 0, 2);
             main.Controls.Add(labelOwnCase, 0, 3);
-            main.Controls.Add(btnRestart, 0, 5);
+            main.Controls.Add(buttonRow, 0, 5);
 
             Controls.Add(main);
         }
@@ -114,6 +131,7 @@ namespace DealOrNoDeal
         {
             labelPrefix.Text = AppLocalization.Get("GameOver.Prefix");
             btnRestart.Text = AppLocalization.Get("GameOver.Restart");
+            btnMainMenu.Text = AppLocalization.Get("GameOver.MainMenu");
 
             if (ownCaseAmountText != null)
                 labelOwnCase.Text = AppLocalization.Get("GameOver.OwnCaseContained", ownCaseAmountText);

@@ -21,6 +21,7 @@ namespace DealOrNoDeal
 
             GameStrings.Register();
             GameSettings.Load();
+            GameHistory.Load();
 
             // Named per-app so it can't collide with any other app's
             // single-instance mutex on the same machine.

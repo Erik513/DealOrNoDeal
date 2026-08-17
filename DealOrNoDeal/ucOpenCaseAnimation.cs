@@ -15,10 +15,10 @@ namespace DealOrNoDeal
     /// </summary>
     public partial class ucOpenCase : UserControl
     {
-        // Target size and growth relative to the control's actual current
+        // Target size and growth relative to the control's actual 
         // size instead of hardcoded pixel values - stays correct at any
         // window size. Bigger than a plain "reveal" size so the case
-        // clearly reads as coming closer to the viewer before it opens.
+        // clearly reads as coming closer to the viewer beforcurrente it opens.
         private const float AnimationTargetFraction = 0.58f;
         private const float NormalScaleFactor = 1.025f;
         private const int NormalIntervalMs = 10;

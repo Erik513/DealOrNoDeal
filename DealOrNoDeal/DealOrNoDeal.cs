@@ -96,8 +96,7 @@ namespace DealOrNoDeal
         private Label labelOffersTitle;
         private Label labelInfoText;
         private RichTextBox txtOfferLog;
-        private Button btnOptions;
-        private Button btnReset;
+        private Button btnMainMenu;
 
         // Raw amounts, not pre-formatted strings - offer log entries and
         // the currently-shown banker offer get re-formatted on the fly
@@ -112,6 +111,7 @@ namespace DealOrNoDeal
         private ucOpenCase caseOpeningView;
         private ucFinalChoice finalChoiceView;
         private ucGameOver gameOverView;
+        private ucHomeScreen homeScreenView;
         private PictureBox lastRemainingCase;
 
         // Set only while the final (keep/swap) case reveal is playing, so
@@ -170,6 +170,7 @@ namespace DealOrNoDeal
             finalChoiceView.KeepMyCaseClicked += (s, e) => RevealFinalCase(selectedCase);
             finalChoiceView.SwapCaseClicked += (s, e) => RevealFinalCase(lastRemainingCase ?? selectedCase);
             gameOverView.RestartClicked += (s, e) => RestartGame();
+            gameOverView.MainMenuClicked += (s, e) => ReturnToMainMenu();
 
             // Live-refresh: both settings only affected newly-built text
             // before - now every already-built control that shows
@@ -205,13 +206,13 @@ namespace DealOrNoDeal
             if (currentInfoTextKey != null)
                 labelInfoText.Text = AppLocalization.Get(currentInfoTextKey, currentInfoTextArgs);
 
-            UIStyles.Buttons.UpdateTooltip(btnOptions, AppLocalization.Get("Options.MenuButton"));
-            UIStyles.Buttons.UpdateTooltip(btnReset, AppLocalization.Get("Game.ResetButton"));
+            UIStyles.Buttons.UpdateTooltip(btnMainMenu, AppLocalization.Get("Game.MainMenuButton"));
 
             bankerOfferView.RefreshLanguage();
             finalChoiceView.RefreshLanguage();
             gameOverView.RefreshLanguage();
             caseOpeningView.RefreshLanguage();
+            homeScreenView.RefreshLanguage();
         }
 
         /// <summary>
@@ -239,6 +240,8 @@ namespace DealOrNoDeal
                 if (shownOwnCaseAmountValue.HasValue)
                     gameOverView.ShowOwnCaseAmount(AppCurrencyFormatter.Format(shownOwnCaseAmountValue.Value, "#,0"));
             }
+
+            homeScreenView.RefreshCurrency();
         }
 
         private string AmountTextOf(PictureBox caseBox)
@@ -323,52 +326,38 @@ namespace DealOrNoDeal
         }
 
         /// <summary>
+        /// Asks for confirmation before leaving an in-progress game - unlike
+        /// the game-over screen's own main-menu button, this one can throw
+        /// away real progress, so it needs a way back out of an accidental
+        /// click.
+        /// </summary>
+        private void ConfirmReturnToMainMenu()
+        {
+            DialogResult result = CustomMessageBox.Show(
+                AppLocalization.Get("Game.ConfirmMainMenuMessage"),
+                AppLocalization.Get("Game.ConfirmMainMenuTitle"),
+                CustomMessageBoxButtons.YesNo,
+                CustomMessageBoxIcon.Warning,
+                this,
+                CustomMessageBoxSize.Small);
+
+            if (result == DialogResult.Yes)
+                ReturnToMainMenu();
+        }
+
+        private void ReturnToMainMenu()
+        {
+            RestartGame();
+            homeScreenView.Visible = true;
+            homeScreenView.BringToFront();
+        }
+
+        /// <summary>
         /// Opens the language/currency options dialog. Saving raises
         /// AppLocalization.LanguageChanged/AppCurrencyFormatter.CurrencyChanged,
         /// which RefreshLanguage/RefreshCurrency (wired up in the
         /// constructor) react to immediately - no restart needed.
         /// </summary>
-        private void OpenOptions()
-        {
-            using (StyledOptionsForm optionsForm = new StyledOptionsForm(AppLocalization.Get("Options.Title")))
-            {
-                optionsForm.SaveButtonText = AppLocalization.Get("Options.Save");
-                optionsForm.CancelButtonText = AppLocalization.Get("Options.Cancel");
-
-                ComboBox languageCombo = UIStyles.ComboBoxes.CreateStandard();
-                languageCombo.Items.Add("English");
-                languageCombo.Items.Add("Deutsch");
-                languageCombo.SelectedIndex = AppLocalization.Language == AppLanguage.German ? 1 : 0;
-
-                // Dollar first - matches English being the default language.
-                ComboBox currencyCombo = UIStyles.ComboBoxes.CreateStandard();
-                currencyCombo.Items.Add("Dollar ($)");
-                currencyCombo.Items.Add("Euro (€)");
-                currencyCombo.SelectedIndex = AppCurrencyFormatter.Currency == AppCurrency.Euro ? 1 : 0;
-
-                optionsForm.PropertyTable.AddRow(AppLocalization.Get("Options.Language"), languageCombo);
-                optionsForm.PropertyTable.AddRow(AppLocalization.Get("Options.Currency"), currencyCombo);
-
-                optionsForm.FitToContent();
-
-                optionsForm.SaveClicked += (s, e) =>
-                {
-                    AppLanguage selectedLanguage = languageCombo.SelectedIndex == 1 ? AppLanguage.German : AppLanguage.English;
-                    AppLocalization.Language = selectedLanguage;
-                    // Also drives CustomWFUI's own built-in text (e.g. the
-                    // title bar's minimize/maximize/close tooltips), which
-                    // is a separate setting from AppLocalization.
-                    UIStyles.Language = selectedLanguage == AppLanguage.German
-                        ? UILanguage.German
-                        : UILanguage.English;
-                    AppCurrencyFormatter.Currency = currencyCombo.SelectedIndex == 1 ? AppCurrency.Euro : AppCurrency.Dollar;
-                    GameSettings.Save();
-                };
-
-                optionsForm.ShowDialog(this);
-            }
-        }
-
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -468,7 +457,17 @@ namespace DealOrNoDeal
             root.Controls.Add(BuildMiddleColumn(resources), 1, 0);
             root.Controls.Add(BuildRightColumn(resources), 2, 0);
 
+            // Both Dock=Fill and intentionally overlap, same as
+            // pboxOfferCover/txtOfferLog - the home screen covers the
+            // entire game layout (not just stageHost) until Play is
+            // clicked, so it needs to sit directly on ContentPanel.
+            homeScreenView = new ucHomeScreen();
+            RefreshHomeScreenRecords();
+            homeScreenView.PlayClicked += (s, e) => homeScreenView.Visible = false;
+
             ContentPanel.Controls.Add(root);
+            ContentPanel.Controls.Add(homeScreenView);
+            homeScreenView.BringToFront();
         }
 
         private Control BuildLeftColumn()
@@ -584,24 +583,20 @@ namespace DealOrNoDeal
             labelInfoText.TextAlign = ContentAlignment.MiddleCenter;
             labelInfoText.Font = new Font(UIStyles.Fonts.Title.FontFamily, 16f, FontStyle.Bold);
 
-            btnOptions = UIStyles.Buttons.CreateStandard("⚙", AppLocalization.Get("Options.MenuButton"));
-            btnOptions.Dock = DockStyle.Right;
-            btnOptions.Width = 56;
-            btnOptions.Font = UIStyles.Fonts.Icon;
-            btnOptions.Click += (s, e) => OpenOptions();
-
-            // Mirrors the options button on the opposite side.
-            btnReset = UIStyles.Buttons.CreateStandard("↺", AppLocalization.Get("Game.ResetButton"));
-            btnReset.Dock = DockStyle.Left;
-            btnReset.Width = 56;
-            btnReset.Font = UIStyles.Fonts.Icon;
-            btnReset.Click += (s, e) => RestartGame();
+            // Options moved to the home screen - this button now leaves an
+            // in-progress game entirely, so it needs a confirmation instead
+            // of acting immediately like the old "restart in place" button
+            // did.
+            btnMainMenu = UIStyles.Buttons.CreateStandard("⌂", AppLocalization.Get("Game.MainMenuButton"));
+            btnMainMenu.Dock = DockStyle.Right;
+            btnMainMenu.Width = 56;
+            btnMainMenu.Font = UIStyles.Fonts.Icon;
+            btnMainMenu.Click += (s, e) => ConfirmReturnToMainMenu();
 
             // Fill added first, edge-docked buttons after - same reasoning
             // as BuildCard: keeps their bands reliably reserved.
             infoBar.Controls.Add(labelInfoText);
-            infoBar.Controls.Add(btnOptions);
-            infoBar.Controls.Add(btnReset);
+            infoBar.Controls.Add(btnMainMenu);
 
             column.Controls.Add(stageHost, 0, 0);
             column.Controls.Add(infoBar, 0, 1);
@@ -790,6 +785,14 @@ namespace DealOrNoDeal
                 caseAmountIndex[caseBox] = amountIndex;
                 remainingAmountIndices.Add(amountIndex);
             }
+        }
+
+        private void RefreshHomeScreenRecords()
+        {
+            homeScreenView.SetRecords(
+                GameSettings.HighestAmount,
+                GameSettings.HighestAmountDate);
+            homeScreenView.SetHistory(GameHistory.Entries);
         }
 
         public void ShowBankerOffer(decimal offerValue)
@@ -1056,6 +1059,16 @@ namespace DealOrNoDeal
             IsGameOver = true;
             this.wonAmountValue = wonAmountValue;
             this.wonAmountFormat = wonAmountFormat;
+
+            if (!GameSettings.HighestAmount.HasValue || wonAmountValue > GameSettings.HighestAmount.Value)
+            {
+                GameSettings.HighestAmount = wonAmountValue;
+                GameSettings.HighestAmountDate = DateTime.Now;
+            }
+
+            GameSettings.Save();
+            GameHistory.Record(wonAmountValue);
+            RefreshHomeScreenRecords();
 
             foreach (PictureBox caseBox in caseList)
                 caseBox.Enabled = false;
