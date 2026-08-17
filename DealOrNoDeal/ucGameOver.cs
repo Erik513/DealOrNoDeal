@@ -96,7 +96,7 @@ namespace DealOrNoDeal
             btnMainMenu.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 16f, FontStyle.Bold);
             btnMainMenu.Click += (s, e) => MainMenuClicked?.Invoke(this, EventArgs.Empty);
 
-            btnRestart = UIStyles.Buttons.CreateGreen(AppLocalization.Get("GameOver.Restart"), size: new Size(200, 64));
+            btnRestart = UIStyles.Buttons.CreatePrimary(AppLocalization.Get("GameOver.Restart"), size: new Size(200, 64));
             btnRestart.Margin = new Padding(0);
             btnRestart.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 16f, FontStyle.Bold);
             btnRestart.Click += (s, e) => RestartClicked?.Invoke(this, EventArgs.Empty);

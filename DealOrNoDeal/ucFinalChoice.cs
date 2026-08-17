@@ -48,7 +48,7 @@ namespace DealOrNoDeal
             buttonPair.FlowDirection = FlowDirection.LeftToRight;
             buttonPair.Anchor = AnchorStyles.None;
 
-            btnKeep = UIStyles.Buttons.CreateGreen(AppLocalization.Get("FinalChoice.Keep"), size: ButtonSize);
+            btnKeep = UIStyles.Buttons.CreatePrimary(AppLocalization.Get("FinalChoice.Keep"), size: ButtonSize);
             btnKeep.Margin = new Padding(0, 0, ButtonGap, 0);
             btnKeep.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 22f, FontStyle.Bold);
             btnKeep.Click += BtnKeep_Click;
