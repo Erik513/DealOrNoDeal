@@ -169,7 +169,7 @@ namespace DealOrNoDeal
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
             bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, OfferAmountFormat, DealResultLabel);
-            bankerOfferView.OfferRevealed += () => SetInfoText("Game.AcceptOrContinue");
+            bankerOfferView.OfferRevealed += HandleOfferRevealed;
             caseOpeningView.AnimationCompleted += CaseOpeningView_AnimationCompleted;
             caseOpeningView.CaseOpenedCompleted += CaseOpeningView_CaseOpenedCompleted;
             finalChoiceView.KeepMyCaseClicked += (s, e) => RevealFinalCase(selectedCase);
@@ -506,11 +506,32 @@ namespace DealOrNoDeal
                 bankerOfferView.BringToFront();
             }
 
+            // Set behind the still-covering "calculating" overlay - not a
+            // spoiler on its own. offerHistoryValues/RenderOfferLog stay
+            // untouched until HandleOfferRevealed, though: that log lives
+            // in the always-visible Offers sidebar, with nothing covering
+            // it, so adding the offer there immediately would spoil it
+            // well before the suspense delay/reveal actually happens.
             bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(offerValue));
             bankerOfferView.SetCasesUntilNextOffer(BankerOfferCalculator.CalculateCasesUntilNextOffer(casesClicked));
             bankerOfferView.BeginRevealDelay(BankerOfferCalculator.CalculateRevealDelayMs(casesClicked));
-            offerHistoryValues.Insert(0, offerValue);
-            RenderOfferLog();
+        }
+
+        /// <summary>
+        /// Fires once the banker's offer is actually revealed (suspense
+        /// delay ran out, or the player clicked to skip it) - only now does
+        /// the offer get logged to the Offers sidebar, which has nothing
+        /// covering it the way ucBankerOffer's own amount does.
+        /// </summary>
+        private void HandleOfferRevealed()
+        {
+            SetInfoText("Game.AcceptOrContinue");
+
+            if (currentOfferAmount.HasValue)
+            {
+                offerHistoryValues.Insert(0, currentOfferAmount.Value);
+                RenderOfferLog();
+            }
         }
 
         /// <summary>
