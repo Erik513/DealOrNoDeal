@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using CustomWFUI;
@@ -319,7 +320,7 @@ namespace DealOrNoDeal
             labelAllTimeBestAmount.Text = FormatOrPlaceholder(highestAmount);
 
             string dateTooltip = highestAmountDate.HasValue
-                ? highestAmountDate.Value.ToString("yyyy-MM-dd HH:mm")
+                ? FormatDate(highestAmountDate.Value)
                 : "";
             allTimeBestToolTip.SetToolTip(labelAllTimeBestName, dateTooltip);
             allTimeBestToolTip.SetToolTip(labelAllTimeBestCase, dateTooltip);
@@ -330,7 +331,7 @@ namespace DealOrNoDeal
             // changes as games get added.
             IEnumerable<string[]> historyRows = historyEntries.Select(entry => new[]
             {
-                entry.Date.ToString("yyyy-MM-dd HH:mm"),
+                FormatDate(entry.Date),
                 entry.ResultLabel,
                 AppCurrencyFormatter.Format(entry.Amount, "#,0")
             });
@@ -513,6 +514,19 @@ namespace DealOrNoDeal
                 BackColor = historyTable.RowBackColor,
                 AutoEllipsis = true
             };
+        }
+
+        // No time component - just the date, in each language's own
+        // conventional order (English keeps the existing ISO-like
+        // year-first style; German uses day/month/year). "/" in a .NET
+        // format string means "the current culture's date separator", not
+        // a literal slash - escaped here so it stays "/" regardless of
+        // the OS's own locale.
+        private static string FormatDate(DateTime date)
+        {
+            return AppLocalization.Language == AppLanguage.German
+                ? date.ToString("dd'/'MM'/'yyyy", CultureInfo.InvariantCulture)
+                : date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
 
         private static string FormatOrPlaceholder(decimal? amount)
