@@ -517,15 +517,13 @@ namespace DealOrNoDeal
         }
 
         // No time component - just the date, in each language's own
-        // conventional order (English keeps the existing ISO-like
-        // year-first style; German uses day/month/year). "/" in a .NET
-        // format string means "the current culture's date separator", not
-        // a literal slash - escaped here so it stays "/" regardless of
-        // the OS's own locale.
+        // conventional order and separator (English keeps the existing
+        // ISO-like year-first style with dashes; German uses
+        // day.month.year with dots, its standard convention).
         private static string FormatDate(DateTime date)
         {
             return AppLocalization.Language == AppLanguage.German
-                ? date.ToString("dd'/'MM'/'yyyy", CultureInfo.InvariantCulture)
+                ? date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
                 : date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
 
