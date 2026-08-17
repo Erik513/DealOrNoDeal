@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -28,36 +27,32 @@ namespace DealOrNoDeal
             25000, 50000, 75000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000
         };
 
-        // Percentage of the average of still-unrevealed amounts the banker
-        // offers in each round, keyed by the click count that triggers that
-        // round's offer. Modeled on the real show: the offer starts well
-        // below the fair average and climbs toward it as fewer cases (and
-        // more information) remain, but stays just under 100% - the bank
-        // always keeps a small edge. Round 29 is the last offer of all,
-        // made right before the final keep-or-swap decision between the
-        // player's own case and the one remaining case.
-        private static readonly Dictionary<int, decimal> BankerOfferPercentageByRound = new Dictionary<int, decimal>
+        // How many cases are left to open once the info text is next shown,
+        // keyed by the click count it applies from. Round thresholds match
+        // BankerOfferCalculator's offer rounds (plus click 1, the very
+        // first case pick, which has no banker offer of its own) - but the
+        // remaining-count values themselves are a separate, hand-tuned
+        // case-opening schedule with no mathematical link to the offer
+        // percentages, so they can't be derived from that table.
+        private static readonly Dictionary<int, int> CasesRemainingByRound = new Dictionary<int, int>
         {
-            { 8, 0.10m },
-            { 14, 0.15m },
-            { 19, 0.25m },
-            { 23, 0.40m },
-            { 25, 0.55m },
-            { 27, 0.75m },
-            { 28, 0.90m },
-            { 29, 0.95m }
+            { 1, 7 },
+            { 8, 6 },
+            { 14, 5 },
+            { 19, 4 },
+            { 23, 2 },
+            { 25, 2 },
+            { 27, 1 },
+            { 28, 1 },
+            { 29, 0 }
         };
 
-        /// <summary>
-        /// Suspense delay (indexed by offer round, in the same order as
-        /// BankerOfferPercentageByRound) before the accept/decline choice
-        /// becomes usable - short for the first offer, longer for later
-        /// ones, since by then there's more at stake and the moment
-        /// deserves to breathe more. Skippable by clicking (see
-        /// ucBankerOffer.BeginRevealDelay), so this is a ceiling on the
-        /// wait, not a forced one.
-        /// </summary>
-        private static readonly int[] BankerOfferRevealDelaysMs = { 1500, 2250, 3000, 3750, 4500, 5250, 6000, 6000 };
+        // The two amount-display formats used throughout: whole amounts for
+        // the 30 fixed case values, and cents-included for the banker's own
+        // computed offer (a percentage of an average, so rarely a round
+        // number).
+        private const string WholeAmountFormat = "#,0";
+        private const string OfferAmountFormat = "#,0.00";
 
         private readonly List<PictureBox> caseList = new List<PictureBox>();
         private readonly List<Button> buttonList = new List<Button>();
@@ -94,14 +89,12 @@ namespace DealOrNoDeal
         private int casesClicked;
         private int casesRemaining;
         private Button lastOpenedButton;
-        public bool IsGameOver;
+        private bool IsGameOver;
 
         private readonly string videoPath = "C:/Users/uif42535/OneDrive - Continental AG/Dateien/Bilder/Visual Studio/DealOrNoDealKoffer/DealersOffer.mp4";
 
         // Core controls addressed by the game logic.
         private Panel panelMyCase;
-        private Panel panelBankerOffer;
-        private Panel stageHost;
         private TableLayoutPanel caseGridPanel;
         private Label labelMyCaseTitle;
         private Label labelOffersTitle;
@@ -175,7 +168,7 @@ namespace DealOrNoDeal
             selectedCase = null;
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
-            bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, "#,0.00", DealResultLabel);
+            bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, OfferAmountFormat, DealResultLabel);
             bankerOfferView.OfferRevealed += () => SetInfoText("Game.AcceptOrContinue");
             caseOpeningView.AnimationCompleted += CaseOpeningView_AnimationCompleted;
             caseOpeningView.CaseOpenedCompleted += CaseOpeningView_CaseOpenedCompleted;
@@ -238,7 +231,7 @@ namespace DealOrNoDeal
             // buttonList[i] always corresponds to CaseAmountValues[i] - set
             // that way in BuildAmountStrip and never reordered.
             for (int i = 0; i < buttonList.Count; i++)
-                buttonList[i].Text = AppCurrencyFormatter.Format(CaseAmountValues[i], "#,0");
+                buttonList[i].Text = AppCurrencyFormatter.Format(CaseAmountValues[i], WholeAmountFormat);
 
             RenderOfferLog();
 
@@ -250,15 +243,15 @@ namespace DealOrNoDeal
                 gameOverView.ShowResult(AppCurrencyFormatter.Format(wonAmountValue, wonAmountFormat));
 
                 if (shownOwnCaseAmountValue.HasValue)
-                    gameOverView.ShowOwnCaseAmount(AppCurrencyFormatter.Format(shownOwnCaseAmountValue.Value, "#,0"));
+                    gameOverView.ShowOwnCaseAmount(AppCurrencyFormatter.Format(shownOwnCaseAmountValue.Value, WholeAmountFormat));
             }
 
-            homeScreenView.RefreshCurrency();
+            homeScreenView.RefreshRecordsDisplay();
         }
 
         private string AmountTextOf(PictureBox caseBox)
         {
-            return AppCurrencyFormatter.Format(CaseAmountValues[caseAmountIndex[caseBox]], "#,0");
+            return AppCurrencyFormatter.Format(CaseAmountValues[caseAmountIndex[caseBox]], WholeAmountFormat);
         }
 
         /// <summary>
@@ -329,14 +322,31 @@ namespace DealOrNoDeal
                 amountButton.Enabled = true;
             }
 
+            HideAllGameViews();
+            gameOverView.Visible = false;
+
+            SetInfoText("Game.ChooseCase");
+        }
+
+        /// <summary>
+        /// Hides every overlapping game-phase view sharing the stage host
+        /// (banker offer, case-opening reveal, final choice, banker video,
+        /// its cover) - not gameOverView, which each caller controls
+        /// separately depending on whether it should end up shown or hidden.
+        /// </summary>
+        private void HideAllGameViews()
+        {
             bankerOfferView.Visible = false;
             caseOpeningView.Visible = false;
             finalChoiceView.Visible = false;
-            gameOverView.Visible = false;
             axBankerVideoPlayer.Visible = false;
             pboxOfferCover.Visible = false;
+        }
 
-            SetInfoText("Game.ChooseCase");
+        private void DisableAllCases()
+        {
+            foreach (PictureBox caseBox in caseList)
+                caseBox.Enabled = false;
         }
 
         /// <summary>
@@ -438,353 +448,6 @@ namespace DealOrNoDeal
                 control.ResumeLayout(false);
         }
 
-        private void InitializeComponent()
-        {
-            ComponentResourceManager resources = new ComponentResourceManager(typeof(DealOrNoDeal));
-
-            AutoScaleMode = AutoScaleMode.Dpi;
-            // Tall enough that the 15-row amount strips (each needs ~30px
-            // to show their text without clipping) still fit underneath
-            // the now-260px-tall "My Case"/"Offers" cards - 700 was only
-            // ever enough before those cards were made taller to stop the
-            // offer log itself from clipping.
-            //
-            // Wide enough that the middle column's own minimum content
-            // width doesn't squeeze the right column's card out of its
-            // gold border - confirmed by testing a range of widths that
-            // the border only reliably renders from ~1350px up; 1200 left
-            // no slack at all. 1450 keeps a safety margin beyond that
-            // measured threshold.
-            MinimumSize = new Size(1450, 800);
-            ClientSize = new Size(1659, 900);
-            StartPosition = FormStartPosition.CenterScreen;
-
-            TableLayoutPanel root = UIStyles.TableLayoutPanels.CreateDark(3, 1);
-            root.Dock = DockStyle.Fill;
-            root.Padding = new Padding(10);
-            root.ColumnStyles.Clear();
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16f));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68f));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16f));
-
-            root.Controls.Add(BuildLeftColumn(), 0, 0);
-            root.Controls.Add(BuildMiddleColumn(resources), 1, 0);
-            root.Controls.Add(BuildRightColumn(resources), 2, 0);
-
-            // Both Dock=Fill and intentionally overlap, same as
-            // pboxOfferCover/txtOfferLog - the home screen covers the
-            // entire game layout (not just stageHost) until Play is
-            // clicked, so it needs to sit directly on ContentPanel.
-            homeScreenView = new ucHomeScreen();
-            RefreshHomeScreenRecords();
-            homeScreenView.PlayClicked += (s, e) => homeScreenView.Visible = false;
-
-            ContentPanel.Controls.Add(root);
-            ContentPanel.Controls.Add(homeScreenView);
-            homeScreenView.BringToFront();
-        }
-
-        private Control BuildLeftColumn()
-        {
-            TableLayoutPanel column = UIStyles.TableLayoutPanels.CreateDark(1, 2);
-            column.Dock = DockStyle.Fill;
-            column.Margin = new Padding(0, 0, 6, 0);
-            column.RowStyles.Clear();
-            // Matches the offers card's height on the right for visual
-            // symmetry - see BuildRightColumn for why it needs to be this
-            // tall.
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 230));
-            column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            Panel myCaseCard = BuildCard(AppLocalization.Get("Game.MyCaseLabel"), out Panel myCaseContent, out labelMyCaseTitle);
-            panelMyCase = myCaseContent;
-            // selectedCase is a fixed size, not Dock=Fill, so it doesn't
-            // automatically stay centered when the window (and so
-            // panelMyCase) is resized - re-center it manually whenever
-            // that happens.
-            panelMyCase.Resize += (s, e) => CenterOwnCaseDisplay();
-            TableLayoutPanel lowAmountStrip = BuildAmountStrip(0, 15);
-
-            column.Controls.Add(myCaseCard, 0, 0);
-            column.Controls.Add(lowAmountStrip, 0, 1);
-
-            return column;
-        }
-
-        private Control BuildRightColumn(ComponentResourceManager resources)
-        {
-            TableLayoutPanel column = UIStyles.TableLayoutPanels.CreateDark(1, 2);
-            column.Dock = DockStyle.Fill;
-            column.Margin = new Padding(6, 0, 0, 0);
-            column.RowStyles.Clear();
-            // Fixed (not percent-based) so this always has enough room for
-            // up to 8 accumulated banker offers regardless of window size -
-            // txtOfferLog has no scrollbar, so anything taller than this
-            // card would previously just get clipped off. 190 was only
-            // ever enough for about 5 lines; 230 still comfortably fits all
-            // 8 with margin to spare.
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 230));
-            column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            Panel offerCard = BuildCard(AppLocalization.Get("Game.OffersLabel"), out Panel offerContent, out labelOffersTitle);
-            panelBankerOffer = offerCard;
-
-            // Plain TextBox can't format individual lines - a RichTextBox
-            // lets the newest offer stand out (larger) from the older ones
-            // below it, all in the same gold tone.
-            // A plain "Cursor = Cursors.Default" (or forcing it on
-            // MouseMove) doesn't work: the native RichEdit control re-sets
-            // its own I-beam cursor on every WM_SETCURSOR message, which
-            // fires far more often than MouseMove - the two kept
-            // overwriting each other, which is exactly what caused the
-            // flicker. ArrowCursorRichTextBox intercepts WM_SETCURSOR
-            // itself and never lets the native control handle it at all.
-            txtOfferLog = new ArrowCursorRichTextBox
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                TabStop = false,
-                BorderStyle = BorderStyle.None,
-                BackColor = Color.FromArgb(64, 64, 64),
-                ForeColor = Color.Gold,
-                Font = UIStyles.Fonts.Normal,
-                ScrollBars = RichTextBoxScrollBars.None,
-                Cursor = Cursors.Default
-            };
-            // ReadOnly still lets it take focus on click and shows a
-            // blinking text caret at the selection - it's just a display,
-            // not an input field, so hand focus straight back whenever it
-            // tries to take it.
-            txtOfferLog.GotFocus += (s, e) => ActiveControl = null;
-
-            pboxOfferCover = new PictureBox
-            {
-                Dock = DockStyle.Fill,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Visible = false,
-                Image = (Image)resources.GetObject("pboxAngebotÜberdecken.Image")
-            };
-
-            offerContent.Controls.Add(txtOfferLog);
-            offerContent.Controls.Add(pboxOfferCover);
-            // Both are Dock=Fill and intentionally overlap - the cover is
-            // meant to hide the offer log while the video is playing.
-            pboxOfferCover.BringToFront();
-
-            TableLayoutPanel highAmountStrip = BuildAmountStrip(15, 15);
-
-            column.Controls.Add(offerCard, 0, 0);
-            column.Controls.Add(highAmountStrip, 0, 1);
-
-            return column;
-        }
-
-        private Control BuildMiddleColumn(ComponentResourceManager resources)
-        {
-            TableLayoutPanel column = UIStyles.TableLayoutPanels.CreateDark(1, 2);
-            column.Dock = DockStyle.Fill;
-            column.Margin = new Padding(6, 0, 6, 0);
-            column.RowStyles.Clear();
-            column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            column.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));
-
-            stageHost = BuildStageHost(resources);
-
-            Panel infoBar = UIStyles.Panels.CreatePrimary();
-            infoBar.Margin = new Padding(0, 6, 0, 0);
-            labelInfoText = UIStyles.Labels.CreateTitle("Text");
-            labelInfoText.Dock = DockStyle.Fill;
-            labelInfoText.TextAlign = ContentAlignment.MiddleCenter;
-            labelInfoText.Font = new Font(UIStyles.Fonts.Title.FontFamily, 16f, FontStyle.Bold);
-
-            // Options moved to the home screen - this button now leaves an
-            // in-progress game entirely, so it needs a confirmation instead
-            // of acting immediately like the old "restart in place" button
-            // did.
-            btnMainMenu = UIStyles.Buttons.CreateStandard("⌂", AppLocalization.Get("Game.MainMenuButton"));
-            btnMainMenu.Dock = DockStyle.Right;
-            btnMainMenu.Width = 56;
-            btnMainMenu.Font = UIStyles.Fonts.Icon;
-            btnMainMenu.Click += (s, e) => ConfirmReturnToMainMenu();
-
-            // Fill added first, edge-docked buttons after - same reasoning
-            // as BuildCard: keeps their bands reliably reserved.
-            infoBar.Controls.Add(labelInfoText);
-            infoBar.Controls.Add(btnMainMenu);
-
-            column.Controls.Add(stageHost, 0, 0);
-            column.Controls.Add(infoBar, 0, 1);
-
-            return column;
-        }
-
-        /// <summary>
-        /// A shared Dock=Fill container for all overlapping game phases
-        /// (case grid, banker video, offer, final choice). In the original
-        /// layout these had different fixed pixel sizes and Anchor
-        /// combinations and drifted apart when scaling - now they share
-        /// exactly the same area.
-        /// </summary>
-        private Panel BuildStageHost(ComponentResourceManager resources)
-        {
-            Panel host = UIStyles.Panels.CreatePrimary();
-            host.BackColor = Color.Gold;
-            host.Padding = new Padding(4);
-
-            TableLayoutPanel caseGrid = BuildCaseGrid(resources);
-
-            axBankerVideoPlayer = new AxWMPLib.AxWindowsMediaPlayer
-            {
-                Dock = DockStyle.Fill,
-                Enabled = true,
-                Visible = false
-            };
-
-            bankerOfferView = new ucBankerOffer { Visible = false };
-            caseOpeningView = new ucOpenCase { Visible = false };
-            finalChoiceView = new ucFinalChoice { Visible = false };
-            gameOverView = new ucGameOver { Visible = false };
-
-            // Order only matters for the initial build - which layer is
-            // visible is controlled purely via Visible/BringToFront, not
-            // via the add order.
-            host.Controls.Add(caseGrid);
-            host.Controls.Add(axBankerVideoPlayer);
-            host.Controls.Add(bankerOfferView);
-            host.Controls.Add(caseOpeningView);
-            host.Controls.Add(finalChoiceView);
-            host.Controls.Add(gameOverView);
-
-            return host;
-        }
-
-        private TableLayoutPanel BuildCaseGrid(ComponentResourceManager resources)
-        {
-            TableLayoutPanel grid = UIStyles.TableLayoutPanels.CreateDark(5, 6);
-            grid.Dock = DockStyle.Fill;
-            grid.BackColor = Color.FromArgb(64, 64, 64);
-            grid.ColumnStyles.Clear();
-            grid.RowStyles.Clear();
-
-            for (int col = 0; col < 5; col++)
-                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20f));
-            for (int row = 0; row < 6; row++)
-                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / 6f));
-
-            for (int i = 1; i <= 30; i++)
-            {
-                PictureBox caseBox = new PictureBox
-                {
-                    Name = "B" + i,
-                    Dock = DockStyle.Fill,
-                    Margin = new Padding(3),
-                    SizeMode = PictureBoxSizeMode.Zoom,
-                    Image = (Image)resources.GetObject("B" + i + ".Image"),
-                    Cursor = Cursors.Hand
-                };
-                caseBox.Click += Case_Click;
-
-                // The case artwork itself already prints a large number on
-                // every case - no need for a separate visible badge, just
-                // the internal lookup for the history table.
-                caseNumbers[caseBox] = i;
-
-                int index = i - 1;
-                int col = index % 5;
-                int row = index / 5;
-                grid.Controls.Add(caseBox, col, row);
-
-                caseList.Add(caseBox);
-            }
-
-            caseGridPanel = grid;
-            return grid;
-        }
-
-        private TableLayoutPanel BuildAmountStrip(int startIndex, int count)
-        {
-            TableLayoutPanel strip = UIStyles.TableLayoutPanels.CreateDark(1, count);
-            strip.Dock = DockStyle.Fill;
-            strip.RowStyles.Clear();
-            strip.ColumnStyles.Clear();
-            strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-
-            for (int i = 0; i < count; i++)
-            {
-                strip.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / count));
-
-                int caseNumber = startIndex + i + 1;
-                Button amountButton = UIStyles.Buttons.CreateStandard(
-                    AppCurrencyFormatter.Format(CaseAmountValues[caseNumber - 1], "#,0"));
-                amountButton.Name = "button" + caseNumber;
-                amountButton.Dock = DockStyle.Fill;
-                // 4, not 2 - the right strip's column consistently renders
-                // 1-2px narrower than the left's (percent-column rounding),
-                // which was exactly enough to swallow a 2px margin whole,
-                // leaving no visible gap at all on that side. A bigger
-                // margin leaves a visible gap on both sides even after
-                // that deficit, just not pixel-identical.
-                amountButton.Margin = new Padding(4);
-                amountButton.TabStop = false;
-                amountButton.Cursor = Cursors.Default;
-                amountButton.ForeColor = Color.Black;
-                SetAmountButtonColor(amountButton, Color.Yellow);
-
-                strip.Controls.Add(amountButton, 0, i);
-                buttonList.Add(amountButton);
-            }
-
-            return strip;
-        }
-
-        /// <summary>
-        /// Sets an amount button's color and keeps its hover/mouse-down
-        /// colors identical to it - these buttons are purely informational
-        /// (TabStop=false, Cursor=Default), so hovering one must never
-        /// visibly change it. Without this, a button's hover color stayed
-        /// fixed at whatever it was set to when the button was first built
-        /// (yellow), so an already-opened, olive-colored amount would flash
-        /// back to yellow on mouseover.
-        /// </summary>
-        private static void SetAmountButtonColor(Button amountButton, Color color)
-        {
-            amountButton.BackColor = color;
-            amountButton.FlatAppearance.MouseOverBackColor = color;
-            amountButton.FlatAppearance.MouseDownBackColor = color;
-        }
-
-        /// <summary>
-        /// Golden frame with a title bar (Dock=Top) and its own indented
-        /// content area (Dock=Fill + Padding). The fill area is added first,
-        /// the title bar after - exactly the docking pattern StyledForm
-        /// itself uses for title bar + content, and it prevents the title
-        /// from overlapping the content.
-        /// </summary>
-        private Panel BuildCard(string title, out Panel content, out Label titleLabel)
-        {
-            Panel card = UIStyles.Panels.CreatePrimary();
-            card.BackColor = Color.Gold;
-            card.Padding = new Padding(2);
-
-            Panel innerContent = UIStyles.Panels.CreateDark();
-            innerContent.Dock = DockStyle.Fill;
-            innerContent.BackColor = Color.FromArgb(64, 64, 64);
-            innerContent.Padding = new Padding(6);
-
-            titleLabel = UIStyles.Labels.CreateTitle(title);
-            titleLabel.Dock = DockStyle.Top;
-            titleLabel.Height = 30;
-            titleLabel.TextAlign = ContentAlignment.MiddleCenter;
-            titleLabel.BackColor = Color.FromArgb(64, 64, 64);
-            titleLabel.ForeColor = Color.Gold;
-
-            card.Controls.Add(innerContent);
-            card.Controls.Add(titleLabel);
-
-            content = innerContent;
-            return card;
-        }
-
         /// <summary>
         /// Distributes the 30 fixed money amounts randomly across the 30
         /// cases - once per round. From here on this is the only place that
@@ -815,7 +478,7 @@ namespace DealOrNoDeal
             homeScreenView.SetHistory(GameHistory.Entries);
         }
 
-        public void ShowBankerOffer(decimal offerValue)
+        private void ShowBankerOffer(decimal offerValue)
         {
             currentOfferAmount = offerValue;
             SetInfoText("Game.YourOffer");
@@ -844,17 +507,10 @@ namespace DealOrNoDeal
             }
 
             bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(offerValue));
-            bankerOfferView.SetCasesUntilNextOffer(CalculateCasesUntilNextOffer());
-            bankerOfferView.BeginRevealDelay(CalculateOfferRevealDelayMs());
+            bankerOfferView.SetCasesUntilNextOffer(BankerOfferCalculator.CalculateCasesUntilNextOffer(casesClicked));
+            bankerOfferView.BeginRevealDelay(BankerOfferCalculator.CalculateRevealDelayMs(casesClicked));
             offerHistoryValues.Insert(0, offerValue);
             RenderOfferLog();
-        }
-
-        private int CalculateOfferRevealDelayMs()
-        {
-            List<int> sortedRounds = BankerOfferPercentageByRound.Keys.OrderBy(round => round).ToList();
-            int roundIndex = sortedRounds.IndexOf(casesClicked);
-            return BankerOfferRevealDelaysMs[Math.Max(0, roundIndex)];
         }
 
         /// <summary>
@@ -921,32 +577,6 @@ namespace DealOrNoDeal
             pboxOfferCover.Visible = false;
         }
 
-        /// <summary>
-        /// How many more cases need to be opened before the next banker
-        /// offer - null on the very last offer (round 29), where declining
-        /// leads straight to the final keep-or-swap decision instead of
-        /// another round of case-opening.
-        /// </summary>
-        private int? CalculateCasesUntilNextOffer()
-        {
-            int nextRoundThreshold = BankerOfferPercentageByRound.Keys
-                .Where(round => round > casesClicked)
-                .DefaultIfEmpty(-1)
-                .Min();
-
-            return nextRoundThreshold == -1 ? (int?)null : nextRoundThreshold - casesClicked;
-        }
-
-        private void CenterOwnCaseDisplay()
-        {
-            if (selectedCase == null || selectedCase.Parent != panelMyCase)
-                return;
-
-            selectedCase.Location = new Point(
-                (panelMyCase.Width - selectedCase.Width) / 2,
-                (panelMyCase.Height - selectedCase.Height) / 2);
-        }
-
         private void Case_Click(object sender, EventArgs e)
         {
             HandleCaseClicked((PictureBox)sender);
@@ -999,7 +629,7 @@ namespace DealOrNoDeal
                 string resultLabel = pendingFinalResultLabel;
                 pendingFinalResultAmount = null;
                 pendingFinalResultLabel = null;
-                EndGame(resultAmount, resultValue, "#,0", resultLabel);
+                EndGame(resultAmount, resultValue, WholeAmountFormat, resultLabel);
                 return;
             }
 
@@ -1014,17 +644,10 @@ namespace DealOrNoDeal
             caseOpeningView.BringToFront();
         }
 
-        public void UpdateInfoText()
+        private void UpdateInfoText()
         {
-            if (casesClicked == 1) casesRemaining = 7;
-            if (casesClicked == 8) casesRemaining = 6;
-            if (casesClicked == 14) casesRemaining = 5;
-            if (casesClicked == 19) casesRemaining = 4;
-            if (casesClicked == 23) casesRemaining = 2;
-            if (casesClicked == 25) casesRemaining = 2;
-            if (casesClicked == 27) casesRemaining = 1;
-            if (casesClicked == 28) casesRemaining = 1;
-            if (casesClicked == 29) casesRemaining = 0;
+            if (CasesRemainingByRound.TryGetValue(casesClicked, out int newCasesRemaining))
+                casesRemaining = newCasesRemaining;
 
             SetInfoText("Game.OpenMoreCases", casesRemaining);
             casesRemaining--;
@@ -1032,9 +655,10 @@ namespace DealOrNoDeal
 
         private void DealerMakesOffer()
         {
-            if (BankerOfferPercentageByRound.TryGetValue(casesClicked, out decimal baseOfferPercentage))
+            if (BankerOfferCalculator.TryGetOfferPercentage(casesClicked, out decimal baseOfferPercentage))
             {
-                decimal bankerOffer = CalculateBankerOffer(baseOfferPercentage);
+                decimal[] remainingValues = remainingAmountIndices.Select(index => CaseAmountValues[index]).ToArray();
+                decimal bankerOffer = BankerOfferCalculator.CalculateOffer(baseOfferPercentage, remainingValues);
                 ShowBankerOffer(bankerOffer);
             }
         }
@@ -1048,7 +672,7 @@ namespace DealOrNoDeal
         /// </summary>
         private void HandleOfferDeclined()
         {
-            if (casesClicked == 29)
+            if (casesClicked == BankerOfferCalculator.LastRound)
             {
                 ShowFinalChoice();
                 return;
@@ -1065,8 +689,7 @@ namespace DealOrNoDeal
             // may be clickable anymore - otherwise a click on the last
             // remaining case could invalidate the click-counter logic (used
             // to cause "Öffne -1 Koffer...").
-            foreach (PictureBox caseBox in caseList)
-                caseBox.Enabled = false;
+            DisableAllCases();
 
             finalChoiceView.Visible = true;
             finalChoiceView.BringToFront();
@@ -1097,8 +720,7 @@ namespace DealOrNoDeal
             GameHistory.Record(wonAmountValue, resultLabel);
             RefreshHomeScreenRecords();
 
-            foreach (PictureBox caseBox in caseList)
-                caseBox.Enabled = false;
+            DisableAllCases();
 
             // Mark every amount as "done" (same olive color already used
             // for amounts revealed during play) except the one actually
@@ -1113,11 +735,7 @@ namespace DealOrNoDeal
                     SetAmountButtonColor(amountButton, Color.Olive);
             }
 
-            bankerOfferView.Visible = false;
-            caseOpeningView.Visible = false;
-            finalChoiceView.Visible = false;
-            axBankerVideoPlayer.Visible = false;
-            pboxOfferCover.Visible = false;
+            HideAllGameViews();
             currentOfferAmount = null;
 
             SetInfoText("Game.Over");
@@ -1141,72 +759,6 @@ namespace DealOrNoDeal
 
             gameOverView.Visible = true;
             gameOverView.BringToFront();
-        }
-
-        /// <summary>
-        /// The banker's offer for this round: the round's base percentage
-        /// of the average remaining amount, dampened when those amounts are
-        /// spread far apart (e.g. a very small and a very large one both
-        /// still in play). A flat percentage-of-average would otherwise be
-        /// unrealistically generous whenever one huge amount happens to
-        /// still be live and everyone would just take the deal - in the
-        /// real show the banker holds back more the riskier/more spread
-        /// out the remaining pool is, and only approaches fair value once
-        /// the remaining amounts are close together.
-        /// </summary>
-        private decimal CalculateBankerOffer(decimal baseOfferPercentage)
-        {
-            if (remainingAmountIndices.Count == 0)
-                return 0;
-
-            decimal[] remainingValues = remainingAmountIndices.Select(index => CaseAmountValues[index]).ToArray();
-            decimal average = remainingValues.Average();
-
-            if (average == 0)
-                return 0;
-
-            decimal variance = remainingValues.Average(value => (value - average) * (value - average));
-            decimal coefficientOfVariation = (decimal)Math.Sqrt((double)variance) / average;
-
-            // Normalize the spread into [0, 1] (capped at a CV of 2, which
-            // is already an extreme spread) and dampen the base percentage
-            // by at most half of it - so a high-risk round pays noticeably
-            // less than the round's usual percentage, but never turns into
-            // an obvious "always decline" trap either.
-            decimal riskFactor = Math.Min(coefficientOfVariation, 2m) / 2m;
-            decimal offerPercentage = baseOfferPercentage * (1m - riskFactor * 0.5m);
-            decimal offer = average * offerPercentage;
-
-            // Hard rule, enforced regardless of how the percentage table
-            // above is tuned: the banker never offers more than the fair
-            // average of what's still in play.
-            return Math.Min(offer, average);
-        }
-    }
-
-    /// <summary>
-    /// A RichTextBox that always shows the normal arrow cursor. The native
-    /// RichEdit control handles WM_SETCURSOR itself and sets its own I-beam
-    /// cursor over text - setting Control.Cursor (or re-forcing it on
-    /// MouseMove) doesn't stop that and just fights it, message by message,
-    /// which is what caused the cursor to flicker. Intercepting
-    /// WM_SETCURSOR here and never forwarding it to the native control is
-    /// the only way to actually prevent it from setting a cursor at all.
-    /// </summary>
-    internal sealed class ArrowCursorRichTextBox : RichTextBox
-    {
-        private const int WM_SETCURSOR = 0x0020;
-
-        protected override void WndProc(ref Message m)
-        {
-            if (m.Msg == WM_SETCURSOR)
-            {
-                Cursor.Current = Cursors.Default;
-                m.Result = (IntPtr)1;
-                return;
-            }
-
-            base.WndProc(ref m);
         }
     }
 }

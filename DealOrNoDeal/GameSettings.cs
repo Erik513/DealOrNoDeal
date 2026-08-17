@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using CustomWFUI;
 using CustomWFUI.Styles;
 
@@ -14,10 +13,7 @@ namespace DealOrNoDeal
     /// </summary>
     internal static class GameSettings
     {
-        private static readonly string FilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "DealOrNoDeal",
-            "settings.txt");
+        private const string FileName = "settings.txt";
 
         // The biggest amount ever won by any means (accepting an offer,
         // keeping, or swapping) - shown on the home screen as the
@@ -45,87 +41,75 @@ namespace DealOrNoDeal
         /// </summary>
         public static void Load()
         {
-            try
+            foreach (string line in AppDataStore.ReadLines(FileName))
             {
-                if (!File.Exists(FilePath))
-                    return;
+                string[] parts = line.Split(new[] { '=' }, 2);
+                if (parts.Length != 2)
+                    continue;
 
-                foreach (string line in File.ReadAllLines(FilePath))
+                string key = parts[0].Trim();
+                string value = parts[1].Trim();
+
+                AppLanguage language;
+                AppCurrency currency;
+                decimal amount;
+                DateTime date;
+
+                if (key == "Language" && Enum.TryParse(value, out language))
                 {
-                    string[] parts = line.Split(new[] { '=' }, 2);
-                    if (parts.Length != 2)
-                        continue;
-
-                    string key = parts[0].Trim();
-                    string value = parts[1].Trim();
-
-                    AppLanguage language;
-                    AppCurrency currency;
-                    decimal amount;
-                    DateTime date;
-
-                    if (key == "Language" && Enum.TryParse(value, out language))
-                    {
-                        AppLocalization.Language = language;
-                        // Also drives CustomWFUI's own built-in text (e.g.
-                        // the title bar's minimize/maximize/close
-                        // tooltips), which is a separate setting from
-                        // AppLocalization.
-                        UIStyles.Language = language == AppLanguage.German
-                            ? UILanguage.German
-                            : UILanguage.English;
-                    }
-                    else if (key == "Currency" && Enum.TryParse(value, out currency))
-                        AppCurrencyFormatter.Currency = currency;
-                    else if (key == "HighestAmount" && decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out amount))
-                        HighestAmount = amount;
-                    else if (key == "HighestAmountDate" && DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out date))
-                        HighestAmountDate = date;
-                    else if (key == "HighestAmountResultLabel")
-                        HighestAmountResultLabel = value;
+                    AppLocalization.Language = language;
+                    // Also drives CustomWFUI's own built-in text (e.g.
+                    // the title bar's minimize/maximize/close
+                    // tooltips), which is a separate setting from
+                    // AppLocalization.
+                    UIStyles.Language = language == AppLanguage.German
+                        ? UILanguage.German
+                        : UILanguage.English;
                 }
-            }
-            catch
-            {
-                // Fall back to defaults rather than crash startup over a
-                // corrupted or inaccessible settings file.
+                else if (key == "Currency" && Enum.TryParse(value, out currency))
+                    AppCurrencyFormatter.Currency = currency;
+                else if (key == "HighestAmount" && decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out amount))
+                    HighestAmount = amount;
+                else if (key == "HighestAmountDate" && DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out date))
+                    HighestAmountDate = date;
+                else if (key == "HighestAmountResultLabel")
+                    HighestAmountResultLabel = value;
             }
         }
 
         public static void Save()
         {
-            try
+            var lines = new List<string>
             {
-                var lines = new List<string>
-                {
-                    "Language=" + AppLocalization.Language,
-                    "Currency=" + AppCurrencyFormatter.Currency
-                };
+                "Language=" + AppLocalization.Language,
+                "Currency=" + AppCurrencyFormatter.Currency
+            };
 
-                // Only written once a real value exists - its absence is
-                // exactly what Load() reads back as "nothing recorded yet".
-                AddIfPresent(lines, "HighestAmount", HighestAmount);
+            // Only written once a real value exists - its absence is
+            // exactly what Load() reads back as "nothing recorded yet".
+            AddIfPresent(lines, "HighestAmount", HighestAmount);
+            AddIfPresent(lines, "HighestAmountDate", HighestAmountDate);
+            AddIfPresent(lines, "HighestAmountResultLabel", HighestAmountResultLabel);
 
-                if (HighestAmountDate.HasValue)
-                    lines.Add("HighestAmountDate=" + HighestAmountDate.Value.ToString("o", CultureInfo.InvariantCulture));
-
-                if (!string.IsNullOrEmpty(HighestAmountResultLabel))
-                    lines.Add("HighestAmountResultLabel=" + HighestAmountResultLabel);
-
-                Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
-                File.WriteAllLines(FilePath, lines);
-            }
-            catch
-            {
-                // Best-effort - if saving fails (e.g. no write access), the
-                // chosen options just won't persist to the next launch.
-            }
+            AppDataStore.WriteLines(FileName, lines);
         }
 
         private static void AddIfPresent(List<string> lines, string key, decimal? value)
         {
             if (value.HasValue)
                 lines.Add(key + "=" + value.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        private static void AddIfPresent(List<string> lines, string key, DateTime? value)
+        {
+            if (value.HasValue)
+                lines.Add(key + "=" + value.Value.ToString("o", CultureInfo.InvariantCulture));
+        }
+
+        private static void AddIfPresent(List<string> lines, string key, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                lines.Add(key + "=" + value);
         }
     }
 }

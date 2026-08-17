@@ -285,13 +285,13 @@ namespace DealOrNoDeal
             highestAmount = highestAmountValue;
             highestAmountDate = highestAmountDateValue;
             highestAmountResultLabel = highestAmountResultLabelValue;
-            RefreshCurrency();
+            RefreshRecordsDisplay();
         }
 
         public void SetHistory(IEnumerable<(DateTime Date, decimal Amount, string ResultLabel)> entries)
         {
             historyEntries = entries?.ToList() ?? new List<(DateTime, decimal, string)>();
-            RefreshCurrency();
+            RefreshRecordsDisplay();
         }
 
         public void RefreshLanguage()
@@ -306,10 +306,14 @@ namespace DealOrNoDeal
                 new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.CaseColumn"), AppLocalization.Get("Home.ResultColumn") },
                 new[] { HistoryDateColumnWidth, HistoryCaseColumnWidth, HistoryResultColumnWidth });
             RebuildSettingsRows();
-            RefreshCurrency();
+            RefreshRecordsDisplay();
         }
 
-        public void RefreshCurrency()
+        // Despite the name, this refreshes more than currency formatting -
+        // the history table and all-time-best tooltips too - since all
+        // three are driven by the same underlying data and need to redraw
+        // together whenever any of it changes.
+        public void RefreshRecordsDisplay()
         {
             labelAllTimeBestCase.Text = highestAmountResultLabel ?? "";
             labelAllTimeBestAmount.Text = FormatOrPlaceholder(highestAmount);
@@ -482,44 +486,9 @@ namespace DealOrNoDeal
             bestRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, HistoryResultColumnWidth));
             bestRow.RowStyles.Add(new RowStyle(SizeType.Absolute, TableRowHeight));
 
-            Label nameLabel = new Label
-            {
-                Text = NoRecordYetPlaceholder,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Padding = new Padding(8, 0, 8, 0),
-                Margin = new Padding(0),
-                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize),
-                ForeColor = UIStyles.Colors.YellowLighter,
-                BackColor = historyTable.RowBackColor,
-                AutoEllipsis = true
-            };
-
-            Label amountLabel = new Label
-            {
-                Text = NoRecordYetPlaceholder,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Padding = new Padding(8, 0, 8, 0),
-                Margin = new Padding(0),
-                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize, FontStyle.Bold),
-                ForeColor = UIStyles.Colors.YellowLighter,
-                BackColor = historyTable.RowBackColor,
-                AutoEllipsis = true
-            };
-
-            Label caseLabel = new Label
-            {
-                Text = NoRecordYetPlaceholder,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Padding = new Padding(8, 0, 8, 0),
-                Margin = new Padding(0),
-                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize),
-                ForeColor = UIStyles.Colors.YellowLighter,
-                BackColor = historyTable.RowBackColor,
-                AutoEllipsis = true
-            };
+            Label nameLabel = CreateAllTimeBestLabel();
+            Label caseLabel = CreateAllTimeBestLabel();
+            Label amountLabel = CreateAllTimeBestLabel(bold: true);
 
             bestRow.Controls.Add(nameLabel, 0, 0);
             bestRow.Controls.Add(caseLabel, 1, 0);
@@ -528,6 +497,22 @@ namespace DealOrNoDeal
             wrapper.Controls.Add(bestRow, 0, 1);
 
             return (wrapper, nameLabel, caseLabel, amountLabel);
+        }
+
+        private Label CreateAllTimeBestLabel(bool bold = false)
+        {
+            return new Label
+            {
+                Text = NoRecordYetPlaceholder,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 8, 0),
+                Margin = new Padding(0),
+                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize, bold ? FontStyle.Bold : FontStyle.Regular),
+                ForeColor = UIStyles.Colors.YellowLighter,
+                BackColor = historyTable.RowBackColor,
+                AutoEllipsis = true
+            };
         }
 
         private static string FormatOrPlaceholder(decimal? amount)
