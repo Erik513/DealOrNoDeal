@@ -24,27 +24,6 @@ A WinForms recreation of the "Deal or No Deal" game show, built on top of the [C
 
 Download the latest `DealOrNoDeal.exe` from the [Releases page](../../releases) and run it. No installer, no other files needed.
 
-## Building from source
-
-This project depends on two of my other repos, cloned as sibling folders (`..\CustomWFUI` and `..\GitHubSelfUpdater` relative to this one):
-
-```bash
-git clone https://github.com/Erik513/DealOrNoDeal.git
-git clone https://github.com/Erik513/CustomWFUI.git
-git clone https://github.com/Erik513/GitHubSelfUpdater.git
-```
-
-They need to sit next to each other in the same parent folder, e.g.:
-
-```
-repos/
-├── DealOrNoDeal/
-├── CustomWFUI/
-└── GitHubSelfUpdater/
-```
-
-Then open `DealOrNoDeal/DealOrNoDeal.sln` in Visual Studio 2022 (.NET 8 SDK, Windows Forms and COM interop tooling required) and build.
-
 ## License
 
 All rights reserved.
