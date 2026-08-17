@@ -2,9 +2,9 @@
 
 A WinForms recreation of the "Deal or No Deal" game show, built on top of the [CustomWFUI](https://github.com/Erik513/CustomWFUI) component library.
 
-![Deal or No Deal — case selection screen with a banker offer on the table](docs/screenshot.png)
-
 ![Deal or No Deal — home screen with game history, all-time best, and inline settings](docs/screenshot-home.png)
+
+![Deal or No Deal — case selection screen with a banker offer on the table](docs/screenshot.png)
 
 ## What it does
 
