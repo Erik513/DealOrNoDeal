@@ -658,7 +658,7 @@ namespace DealOrNoDeal
             if (BankerOfferCalculator.TryGetOfferPercentage(casesClicked, out decimal baseOfferPercentage))
             {
                 decimal[] remainingValues = remainingAmountIndices.Select(index => CaseAmountValues[index]).ToArray();
-                decimal bankerOffer = BankerOfferCalculator.CalculateOffer(baseOfferPercentage, remainingValues);
+                decimal bankerOffer = BankerOfferCalculator.CalculateOffer(baseOfferPercentage, remainingValues, random);
                 ShowBankerOffer(bankerOffer);
             }
         }

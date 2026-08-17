@@ -75,6 +75,13 @@ namespace DealOrNoDeal
             return nextRoundThreshold == -1 ? (int?)null : nextRoundThreshold - casesClicked;
         }
 
+        // Chance that a given offer gets nudged to a nearby "nicer" number
+        // (see RoundToNiceNumber) instead of staying at its raw computed
+        // value - occasional, not every time, so the offer still mostly
+        // reads as the result of real math rather than always being either
+        // suspiciously precise or suspiciously round.
+        private const double RoundingChance = 0.35;
+
         /// <summary>
         /// The banker's offer for this round: the round's base percentage
         /// of the average remaining amount, dampened when those amounts are
@@ -86,7 +93,7 @@ namespace DealOrNoDeal
         /// out the remaining pool is, and only approaches fair value once
         /// the remaining amounts are close together.
         /// </summary>
-        public static decimal CalculateOffer(decimal baseOfferPercentage, IReadOnlyCollection<decimal> remainingValues)
+        public static decimal CalculateOffer(decimal baseOfferPercentage, IReadOnlyCollection<decimal> remainingValues, Random random)
         {
             if (remainingValues.Count == 0)
                 return 0;
@@ -108,10 +115,35 @@ namespace DealOrNoDeal
             decimal offerPercentage = baseOfferPercentage * (1m - riskFactor * 0.5m);
             decimal offer = average * offerPercentage;
 
+            if (offer > 0 && random.NextDouble() < RoundingChance)
+                offer = RoundToNiceNumber(offer, random);
+
             // Hard rule, enforced regardless of how the percentage table
-            // above is tuned: the banker never offers more than the fair
-            // average of what's still in play.
+            // above is tuned or whether the rounding above just nudged the
+            // offer up: the banker never offers more than the fair average
+            // of what's still in play.
             return Math.Min(offer, average);
+        }
+
+        /// <summary>
+        /// Rounds to roughly 2 significant digits (e.g. 8,050.79 -> 8,000
+        /// or 8,100; 148,732 -> 140,000 or 150,000) - up or down, picked
+        /// randomly, the way a banker eyeballing a number might round it
+        /// off rather than reading out every cent.
+        /// </summary>
+        private static decimal RoundToNiceNumber(decimal offer, Random random)
+        {
+            decimal magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)offer)) - 1);
+            decimal increment = Math.Max(1m, magnitude);
+            decimal remainder = offer % increment;
+
+            if (remainder == 0)
+                return offer;
+
+            decimal roundedDown = offer - remainder;
+            decimal roundedUp = roundedDown + increment;
+
+            return Math.Max(0, random.Next(2) == 0 ? roundedDown : roundedUp);
         }
     }
 }
