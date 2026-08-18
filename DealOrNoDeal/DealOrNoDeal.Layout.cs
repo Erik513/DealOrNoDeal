@@ -181,7 +181,8 @@ namespace DealOrNoDeal
             infoBar.Margin = new Padding(0, 6, 0, 0);
             labelInfoText = UIStyles.Labels.CreateTitle("Text");
             labelInfoText.Dock = DockStyle.Fill;
-            labelInfoText.TextAlign = ContentAlignment.MiddleCenter;
+            labelInfoText.TextAlign = ContentAlignment.MiddleLeft;
+            labelInfoText.Padding = new Padding(16, 0, 0, 0);
             labelInfoText.Font = new Font(UIStyles.Fonts.Title.FontFamily, 16f, FontStyle.Bold);
 
             // Options moved to the home screen - this button now leaves an
@@ -189,7 +190,7 @@ namespace DealOrNoDeal
             // of acting immediately like the old "restart in place" button
             // did.
             btnMainMenu = UIStyles.Buttons.CreateStandard("⌂", AppLocalization.Get("Game.MainMenuButton"));
-            btnMainMenu.Dock = DockStyle.Right;
+            btnMainMenu.Dock = DockStyle.Left;
             btnMainMenu.Width = 56;
             btnMainMenu.Font = UIStyles.Fonts.Icon;
             btnMainMenu.Click += (s, e) => ConfirmReturnToMainMenu();
