@@ -670,7 +670,8 @@ namespace DealOrNoDeal
             if (CasesRemainingByRound.TryGetValue(casesClicked, out int newCasesRemaining))
                 casesRemaining = newCasesRemaining;
 
-            SetInfoText("Game.OpenMoreCases", casesRemaining);
+            string key = casesRemaining == 1 ? "Game.OpenMoreCaseSingular" : "Game.OpenMoreCases";
+            SetInfoText(key, casesRemaining);
             casesRemaining--;
         }
 

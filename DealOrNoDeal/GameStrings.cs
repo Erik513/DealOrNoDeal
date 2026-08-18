@@ -23,6 +23,7 @@ namespace DealOrNoDeal
                 ["Game.BankerCalculating"] = "The banker is calculating!",
                 ["Game.YourOffer"] = "Your offer",
                 ["Game.AcceptOrContinue"] = "Accept the offer, or keep going?",
+                ["Game.OpenMoreCaseSingular"] = "Open {0} more case until the banker's offer!",
                 ["Game.OpenMoreCases"] = "Open {0} more cases until the banker's offer!",
                 ["Game.MakeDecision"] = "Make your decision!",
                 ["Game.Over"] = "Game complete!",
@@ -35,6 +36,7 @@ namespace DealOrNoDeal
                 ["GameOver.OwnCaseContained"] = "Your own case contained: {0}",
 
                 ["BankerOffer.Placeholder"] = "Offer",
+                ["BankerOffer.CaseUntilNextSingular"] = "({0} case until the next offer)",
                 ["BankerOffer.CasesUntilNext"] = "({0} cases until the next offer)",
                 ["BankerOffer.FinalOffer"] = "(last offer)",
                 ["BankerOffer.ClickToSkip"] = "Click to skip",
@@ -73,6 +75,8 @@ namespace DealOrNoDeal
                 ["Game.BankerCalculating"] = "Der Bänker rechnet!",
                 ["Game.YourOffer"] = "Dein Angebot",
                 ["Game.AcceptOrContinue"] = "Angebot annehmen oder weiter ins Risiko?",
+                // "Koffer" is invariant here too (see BankerOffer.CaseUntilNextSingular).
+                ["Game.OpenMoreCaseSingular"] = "Öffne {0} Koffer bis zum Angebot des Bänkers!",
                 ["Game.OpenMoreCases"] = "Öffne {0} Koffer bis zum Angebot des Bänkers!",
                 ["Game.MakeDecision"] = "Triff deine Entscheidung!",
                 ["Game.Over"] = "Spiel beendet!",
@@ -85,6 +89,11 @@ namespace DealOrNoDeal
                 ["GameOver.OwnCaseContained"] = "Dein eigener Koffer enthielt: {0}",
 
                 ["BankerOffer.Placeholder"] = "Angebot",
+                // "Koffer" is invariant here - German doesn't inflect this
+                // noun for singular/plural (1 Koffer, 2 Koffer), so this is
+                // deliberately identical to the plural entry below, unlike
+                // the English "case"/"cases" pair it corresponds to.
+                ["BankerOffer.CaseUntilNextSingular"] = "({0} Koffer bis zum nächsten Angebot)",
                 ["BankerOffer.CasesUntilNext"] = "({0} Koffer bis zum nächsten Angebot)",
                 ["BankerOffer.FinalOffer"] = "(letztes Angebot)",
                 ["BankerOffer.ClickToSkip"] = "Klicken zum Überspringen",

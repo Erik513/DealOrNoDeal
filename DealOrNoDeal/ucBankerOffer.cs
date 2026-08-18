@@ -283,9 +283,16 @@ namespace DealOrNoDeal
 
         private void UpdateCasesUntilNextLabel()
         {
-            labelCasesUntilNext.Text = casesUntilNextOffer.HasValue
-                ? AppLocalization.Get("BankerOffer.CasesUntilNext", casesUntilNextOffer.Value)
-                : AppLocalization.Get("BankerOffer.FinalOffer");
+            if (!casesUntilNextOffer.HasValue)
+            {
+                labelCasesUntilNext.Text = AppLocalization.Get("BankerOffer.FinalOffer");
+                return;
+            }
+
+            string key = casesUntilNextOffer.Value == 1
+                ? "BankerOffer.CaseUntilNextSingular"
+                : "BankerOffer.CasesUntilNext";
+            labelCasesUntilNext.Text = AppLocalization.Get(key, casesUntilNextOffer.Value);
         }
 
         private void PboxAcceptOffer_Click(object sender, EventArgs e)
