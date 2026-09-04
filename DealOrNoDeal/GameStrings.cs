@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using CustomWFUI;
+using ErikwnkCore;
 
 namespace DealOrNoDeal
 {
     /// <summary>
     /// All of this game's own translated text, registered with
-    /// CustomWFUI's AppLocalization once at startup. "Deal Or No Deal ?" on
+    /// ErikwnkCore's AppLocalization once at startup. "Deal Or No Deal ?" on
     /// the banker-offer screen is deliberately left untranslated - it's the
     /// show's own name, not translated in the real show's German version
     /// either.

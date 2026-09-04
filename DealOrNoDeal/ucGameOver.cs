@@ -2,7 +2,8 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using CustomWFUI;
+using ErikwnkCore;
+using ErikwnkWFUI;
 
 namespace DealOrNoDeal
 {

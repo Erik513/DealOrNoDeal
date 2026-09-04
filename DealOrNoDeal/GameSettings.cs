@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using CustomWFUI;
-using CustomWFUI.Styles;
+using ErikwnkCore;
+using ErikwnkWFUI;
 
 namespace DealOrNoDeal
 {
@@ -57,14 +57,12 @@ namespace DealOrNoDeal
 
                 if (key == "Language" && Enum.TryParse(value, out language))
                 {
-                    AppLocalization.Language = language;
-                    // Also drives CustomWFUI's own built-in text (e.g.
-                    // the title bar's minimize/maximize/close
-                    // tooltips), which is a separate setting from
-                    // AppLocalization.
-                    UIStyles.Language = language == AppLanguage.German
-                        ? UILanguage.German
-                        : UILanguage.English;
+                    // Also drives ErikwnkWFUI's own built-in text (e.g.
+                    // the title bar's minimize/maximize/close tooltips),
+                    // via UIStyles.Language - a separate setting from
+                    // AppLocalization.Language that SetLanguage keeps in
+                    // sync with it.
+                    UIStyles.SetLanguage(language);
                 }
                 else if (key == "Currency" && Enum.TryParse(value, out currency))
                     AppCurrencyFormatter.Currency = currency;

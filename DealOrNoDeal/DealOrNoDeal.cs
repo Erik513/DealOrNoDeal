@@ -7,9 +7,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Windows.Forms;
-using CustomWFUI;
-using CustomWFUI.Forms;
-using CustomWFUI.Styles;
+using ErikwnkCore;
+using ErikwnkWFUI;
+using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Styles;
+using MessageBox = ErikwnkWFUI.Forms.MessageBox;
+using MessageBoxButtons = ErikwnkWFUI.Forms.MessageBoxButtons;
+using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
 
 namespace DealOrNoDeal
 {
@@ -357,13 +361,13 @@ namespace DealOrNoDeal
         /// </summary>
         private void ConfirmReturnToMainMenu()
         {
-            DialogResult result = CustomMessageBox.Show(
+            DialogResult result = MessageBox.Show(
                 AppLocalization.Get("Game.ConfirmMainMenuMessage"),
                 AppLocalization.Get("Game.ConfirmMainMenuTitle"),
-                CustomMessageBoxButtons.YesNo,
-                CustomMessageBoxIcon.Warning,
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
                 this,
-                CustomMessageBoxSize.Small);
+                MessageBoxSize.Small);
 
             if (result == DialogResult.Yes)
                 ReturnToMainMenu();

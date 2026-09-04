@@ -1,7 +1,8 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using CustomWFUI;
+using ErikwnkCore;
+using ErikwnkWFUI;
 
 namespace DealOrNoDeal
 {
@@ -53,7 +54,7 @@ namespace DealOrNoDeal
             btnKeep.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 22f, FontStyle.Bold);
             btnKeep.Click += BtnKeep_Click;
 
-            btnSwap = UIStyles.Buttons.CreateDanger(AppLocalization.Get("FinalChoice.Swap"), size: ButtonSize);
+            btnSwap = UIStyles.Buttons.CreateRed(AppLocalization.Get("FinalChoice.Swap"), size: ButtonSize);
             btnSwap.Margin = new Padding(0);
             btnSwap.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 22f, FontStyle.Bold);
             btnSwap.Click += BtnSwap_Click;

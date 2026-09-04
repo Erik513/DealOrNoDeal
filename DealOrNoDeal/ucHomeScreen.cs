@@ -4,9 +4,11 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using CustomWFUI;
-using CustomWFUI.Controls;
-using CustomWFUI.Styles;
+using ErikwnkCore;
+using ErikwnkWFUI;
+using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Styles;
+using ListView = ErikwnkWFUI.Controls.ListView;
 
 namespace DealOrNoDeal
 {
@@ -79,8 +81,8 @@ namespace DealOrNoDeal
         private readonly Label labelAllTimeBestName;
         private readonly Label labelAllTimeBestCase;
         private readonly Label labelAllTimeBestAmount;
-        private readonly StyledDataTable historyTable;
-        private readonly StyledPropertyTable settingsTable;
+        private readonly ListView historyTable;
+        private readonly PropertyTable settingsTable;
         private readonly ComboBox languageCombo;
         private readonly ComboBox currencyCombo;
         private readonly Button btnPlay;
@@ -123,10 +125,10 @@ namespace DealOrNoDeal
             // content area. The right column is a 3-row table (stacked
             // content / spacer / Play) that stretches to match history's
             // height, so Play ends up pinned to the bottom-right corner of
-            // the whole block. The data tables use StyledDataTable (not the
-            // full StyledListView - no clipboard copy/resizable columns
-            // needed for read-only data); history is capped at 20 rows so
-            // it never needs to scroll.
+            // the whole block. historyTable is a plain ListView with
+            // resizing/reordering turned off (no clipboard copy/resizable
+            // columns needed for read-only data); history is capped at 20
+            // rows so it never needs to scroll.
             TableLayoutPanel content = UIStyles.TableLayoutPanels.CreateStandard(2, 1);
             content.AutoSize = true;
             content.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -138,14 +140,15 @@ namespace DealOrNoDeal
             content.RowStyles.Clear();
             content.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            historyTable = UIStyles.DataTables.Create();
-            historyTable.HeaderHeight = TableHeaderHeight;
-            historyTable.RowHeight = TableRowHeight;
-            historyTable.RowFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize);
-            historyTable.HeaderFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableHeaderFontSize, FontStyle.Bold);
-            historyTable.SetColumns(
-                new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.CaseColumn"), AppLocalization.Get("Home.ResultColumn") },
-                new[] { HistoryDateColumnWidth, HistoryCaseColumnWidth, HistoryResultColumnWidth });
+            historyTable = new ListView
+            {
+                AllowColumnResizing = false,
+                AllowColumnReordering = false,
+                RowHeight = TableRowHeight,
+                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize),
+                HeaderFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableHeaderFontSize, FontStyle.Bold)
+            };
+            SetHistoryColumns();
 
             labelHistoryTitle = CreateTableTitleLabel(AppLocalization.Get("Home.HistoryTitle"));
 
@@ -180,13 +183,12 @@ namespace DealOrNoDeal
             languageCombo.SelectedIndexChanged += (s, e) =>
             {
                 AppLanguage selectedLanguage = languageCombo.SelectedIndex == 1 ? AppLanguage.German : AppLanguage.English;
-                AppLocalization.Language = selectedLanguage;
-                // Also drives CustomWFUI's own built-in text (e.g. the
-                // title bar's minimize/maximize/close tooltips), which is a
-                // separate setting from AppLocalization.
-                UIStyles.Language = selectedLanguage == AppLanguage.German
-                    ? UILanguage.German
-                    : UILanguage.English;
+                // Also drives ErikwnkWFUI's own built-in text (e.g. the
+                // title bar's minimize/maximize/close tooltips), via
+                // UIStyles.Language - a separate setting from
+                // AppLocalization.Language that SetLanguage keeps in sync
+                // with it.
+                UIStyles.SetLanguage(selectedLanguage);
                 GameSettings.Save();
             };
 
@@ -201,7 +203,7 @@ namespace DealOrNoDeal
                 GameSettings.Save();
             };
 
-            settingsTable = UIStyles.PropertyTables.Create();
+            settingsTable = UIStyles.PropertyTables.CreateStandard();
             settingsTable.Dock = DockStyle.None;
             settingsTable.Anchor = AnchorStyles.Left;
             settingsTable.Margin = new Padding(0);
@@ -303,11 +305,17 @@ namespace DealOrNoDeal
             labelInstructionsBody.Text = AppLocalization.Get("Home.InstructionsBody");
             labelSettingsTitle.Text = AppLocalization.Get("Home.SettingsTitle");
             labelAllTimeBestName.Text = AppLocalization.Get("Home.AllTimeBestRow");
-            historyTable.SetColumns(
-                new[] { AppLocalization.Get("Home.DateColumn"), AppLocalization.Get("Home.CaseColumn"), AppLocalization.Get("Home.ResultColumn") },
-                new[] { HistoryDateColumnWidth, HistoryCaseColumnWidth, HistoryResultColumnWidth });
+            SetHistoryColumns();
             RebuildSettingsRows();
             RefreshRecordsDisplay();
+        }
+
+        private void SetHistoryColumns()
+        {
+            historyTable.Columns.Clear();
+            historyTable.Columns.Add(AppLocalization.Get("Home.DateColumn"), HistoryDateColumnWidth);
+            historyTable.Columns.Add(AppLocalization.Get("Home.CaseColumn"), HistoryCaseColumnWidth);
+            historyTable.Columns.Add(AppLocalization.Get("Home.ResultColumn"), HistoryResultColumnWidth);
         }
 
         // Despite the name, this refreshes more than currency formatting -
@@ -337,7 +345,10 @@ namespace DealOrNoDeal
             });
             IEnumerable<string[]> blankPadding = Enumerable
                 .Repeat(new[] { string.Empty, string.Empty, string.Empty }, Math.Max(0, HistoryDisplayRowCount - historyEntries.Count));
-            historyTable.SetRows(historyRows.Concat(blankPadding));
+
+            historyTable.Items.Clear();
+            foreach (string[] row in historyRows.Concat(blankPadding))
+                historyTable.Items.Add(new ListViewItem(row));
         }
 
         private void RebuildSettingsRows()
