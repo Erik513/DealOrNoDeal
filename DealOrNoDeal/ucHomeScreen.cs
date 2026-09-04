@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using ErikwnkCore;
@@ -328,7 +327,7 @@ namespace DealOrNoDeal
             labelAllTimeBestAmount.Text = FormatOrPlaceholder(highestAmount);
 
             string dateTooltip = highestAmountDate.HasValue
-                ? FormatDate(highestAmountDate.Value)
+                ? AppDateFormatter.Format(highestAmountDate.Value)
                 : "";
             allTimeBestToolTip.SetToolTip(labelAllTimeBestName, dateTooltip);
             allTimeBestToolTip.SetToolTip(labelAllTimeBestCase, dateTooltip);
@@ -339,7 +338,7 @@ namespace DealOrNoDeal
             // changes as games get added.
             IEnumerable<string[]> historyRows = historyEntries.Select(entry => new[]
             {
-                FormatDate(entry.Date),
+                AppDateFormatter.Format(entry.Date),
                 entry.ResultLabel,
                 AppCurrencyFormatter.Format(entry.Amount, "#,0")
             });
@@ -525,17 +524,6 @@ namespace DealOrNoDeal
                 BackColor = historyTable.RowBackColor,
                 AutoEllipsis = true
             };
-        }
-
-        // No time component - just the date, in each language's own
-        // conventional order and separator (English keeps the existing
-        // ISO-like year-first style with dashes; German uses
-        // day.month.year with dots, its standard convention).
-        private static string FormatDate(DateTime date)
-        {
-            return AppLocalization.Language == AppLanguage.German
-                ? date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
-                : date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
 
         private static string FormatOrPlaceholder(decimal? amount)
