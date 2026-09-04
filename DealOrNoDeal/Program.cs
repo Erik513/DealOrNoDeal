@@ -1,15 +1,16 @@
 using System;
-using System.Threading;
 using System.Windows.Forms;
-using CustomWFUI;
-using CustomWFUI.Forms;
+using ErikwnkCore;
+using ErikwnkWFUI;
+using ErikwnkWFUI.Forms;
+using MessageBox = ErikwnkWFUI.Forms.MessageBox;
+using MessageBoxButtons = ErikwnkWFUI.Forms.MessageBoxButtons;
+using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
 
 namespace DealOrNoDeal
 {
     static class Program
     {
-        private static Mutex instanceMutex;
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -19,7 +20,7 @@ namespace DealOrNoDeal
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Black/yellow, not CustomWFUI's default blue - has to happen
+            // Black/yellow, not ErikwnkWFUI's default blue - has to happen
             // before any control is built, since a few of them only read
             // their accent color once at construction time.
             UIStyles.Colors.SetAccent(UIStyles.Colors.YellowLighter);
@@ -30,28 +31,20 @@ namespace DealOrNoDeal
 
             // Named per-app so it can't collide with any other app's
             // single-instance mutex on the same machine.
-            instanceMutex = new Mutex(true, "DealOrNoDeal_SingleInstance", out bool createdNew);
-
-            if (!createdNew)
+            using (var guard = new SingleInstanceGuard("DealOrNoDeal_SingleInstance"))
             {
-                CustomMessageBox.Show(
-                    AppLocalization.Get("App.AlreadyRunning"),
-                    "Deal or No Deal",
-                    CustomMessageBoxButtons.OK,
-                    CustomMessageBoxIcon.Info);
+                if (!guard.IsFirstInstance)
+                {
+                    MessageBox.Show(
+                        AppLocalization.Get("App.AlreadyRunning"),
+                        "Deal or No Deal",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Info);
 
-                instanceMutex.Dispose();
-                return;
-            }
+                    return;
+                }
 
-            try
-            {
                 Application.Run(new DealOrNoDeal());
-            }
-            finally
-            {
-                instanceMutex.ReleaseMutex();
-                instanceMutex.Dispose();
             }
         }
     }

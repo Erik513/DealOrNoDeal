@@ -12,7 +12,7 @@
     <NoWarn>$(NoWarn);CA1416</NoWarn>
 
     <!-- The GitHub self-updater only ever swaps in one downloaded .exe
-         over the currently-running one (see GitHubSelfUpdater's
+         over the currently-running one (see ErikwnkCore.Updater's
          SelfUpdater) - these make "Publish" always produce a single,
          fully self-contained exe with no loose sibling DLLs, instead of
          requiring extra flags to be remembered on every publish. -->
@@ -54,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\CustomWFUI\CustomWFUI\CustomWFUI.csproj" />
+    <ProjectReference Include="..\..\ErikwnkWFUI\ErikwnkWFUI\ErikwnkWFUI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

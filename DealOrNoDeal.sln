@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.33214.272
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DealOrNoDeal", "DealOrNoDeal\DealOrNoDeal.csproj", "{F1204EC8-5835-46BC-ABC4-1C0891087A7D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomWFUI", "..\CustomWFUI\CustomWFUI\CustomWFUI.csproj", "{67BEB9A5-DD73-4C4A-910B-D9848640924A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErikwnkWFUI", "..\ErikwnkWFUI\ErikwnkWFUI\ErikwnkWFUI.csproj", "{67BEB9A5-DD73-4C4A-910B-D9848640924A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

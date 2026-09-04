@@ -1,6 +1,6 @@
 # Deal or No Deal
 
-A WinForms recreation of the "Deal or No Deal" game show, built on top of the [CustomWFUI](https://github.com/Erik513/CustomWFUI) component library.
+A WinForms recreation of the "Deal or No Deal" game show, built on top of the [ErikwnkWFUI](https://github.com/Erik513/ErikwnkWFUI) component library.
 
 ![Deal or No Deal — home screen with game history, all-time best, and inline settings](docs/screenshot-home.png)
 
