@@ -180,7 +180,7 @@ namespace DealOrNoDeal
             // skip"/"click to close" prompt - plain gray, docked to the
             // very bottom of the control - instead of sitting right under
             // the calculating text like a caption.
-            labelCalculatingSkipHint = UIStyles.Labels.CreateNormal(AppLocalization.Get("BankerOffer.ClickToSkip"));
+            labelCalculatingSkipHint = UIStyles.Labels.CreateStandard(AppLocalization.Get("BankerOffer.ClickToSkip"));
             labelCalculatingSkipHint.Dock = DockStyle.Bottom;
             labelCalculatingSkipHint.Height = 32;
             labelCalculatingSkipHint.TextAlign = ContentAlignment.MiddleCenter;

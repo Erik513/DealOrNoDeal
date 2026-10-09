@@ -66,7 +66,7 @@ namespace DealOrNoDeal
             hintPanel.Dock = DockStyle.Bottom;
             hintPanel.Height = 75;
 
-            labelPrompt = UIStyles.Labels.CreateNormal(AppLocalization.Get("FinalChoice.Prompt"));
+            labelPrompt = UIStyles.Labels.CreateStandard(AppLocalization.Get("FinalChoice.Prompt"));
             labelPrompt.Dock = DockStyle.Fill;
             labelPrompt.TextAlign = ContentAlignment.MiddleCenter;
             labelPrompt.Font = new Font(UIStyles.Fonts.Title.FontFamily, 15.75f);

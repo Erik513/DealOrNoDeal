@@ -92,7 +92,7 @@ namespace DealOrNoDeal
             labelCaseAmount.Visible = false;
             labelCaseAmount.Click += UcOpenCase_Click;
 
-            labelClickToClose = UIStyles.Labels.CreateNormal(AppLocalization.Get("OpenCase.ClickToSkip"));
+            labelClickToClose = UIStyles.Labels.CreateStandard(AppLocalization.Get("OpenCase.ClickToSkip"));
             labelClickToClose.Dock = DockStyle.Fill;
             labelClickToClose.TextAlign = ContentAlignment.MiddleCenter;
             labelClickToClose.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 12.75f);

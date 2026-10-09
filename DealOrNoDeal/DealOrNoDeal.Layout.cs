@@ -181,6 +181,8 @@ namespace DealOrNoDeal
             Panel infoBar = UIStyles.Panels.CreatePrimary();
             infoBar.Margin = new Padding(0, 6, 0, 0);
             labelInfoText = UIStyles.Labels.CreateTitle("Text");
+            // CreateTitle is transparent now; the dark bar behind the text was its old default.
+            labelInfoText.BackColor = UIStyles.Colors.BackgroundDark;
             labelInfoText.Dock = DockStyle.Fill;
             labelInfoText.TextAlign = ContentAlignment.MiddleLeft;
             labelInfoText.Padding = new Padding(16, 0, 0, 0);

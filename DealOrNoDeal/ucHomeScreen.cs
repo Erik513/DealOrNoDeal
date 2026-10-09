@@ -8,6 +8,7 @@ using ErikwnkWFUI;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ListView = ErikwnkWFUI.Controls.ListView;
+using ComboBox = System.Windows.Forms.ComboBox;
 
 namespace DealOrNoDeal
 {
@@ -124,10 +125,11 @@ namespace DealOrNoDeal
             // content area. The right column is a 3-row table (stacked
             // content / spacer / Play) that stretches to match history's
             // height, so Play ends up pinned to the bottom-right corner of
-            // the whole block. historyTable is a plain ListView with
-            // resizing/reordering turned off (no clipboard copy/resizable
-            // columns needed for read-only data); history is capped at 20
-            // rows so it never needs to scroll.
+            // the whole block. historyTable is a list with a fixed row count
+            // (FixedRowCount: exactly as big as its columns and its 20 rows,
+            // no scroll bars) that only shows - no sorting, reordering or
+            // selecting; history is capped at 20 rows so it never needs to
+            // scroll.
             TableLayoutPanel content = UIStyles.TableLayoutPanels.CreateStandard(2, 1);
             content.AutoSize = true;
             content.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -139,14 +141,15 @@ namespace DealOrNoDeal
             content.RowStyles.Clear();
             content.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            historyTable = new ListView
-            {
-                AllowColumnResizing = false,
-                AllowColumnReordering = false,
-                RowHeight = TableRowHeight,
-                Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize),
-                HeaderFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableHeaderFontSize, FontStyle.Bold)
-            };
+            historyTable = (ListView)UIStyles.ListViews.CreateStandard();
+            historyTable.FixedRowCount = HistoryDisplayRowCount;
+            historyTable.AllowColumnResizing = false;
+            historyTable.SortingEnabled = false;
+            historyTable.AllowColumnReordering = false;
+            historyTable.AllowSelection = false;
+            historyTable.RowHeight = TableRowHeight;
+            historyTable.Font = new Font(UIStyles.Fonts.Normal.FontFamily, TableRowFontSize);
+            historyTable.HeaderFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableHeaderFontSize, FontStyle.Bold);
             SetHistoryColumns();
 
             labelHistoryTitle = CreateTableTitleLabel(AppLocalization.Get("Home.HistoryTitle"));
