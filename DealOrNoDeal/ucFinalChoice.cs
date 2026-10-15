@@ -45,7 +45,7 @@ namespace DealOrNoDeal
             // FlowLayoutPanel keeps both buttons right next to each other,
             // with the whole pair then centered as one unit via
             // Anchor=None - same approach the case artwork used before.
-            FlowLayoutPanel buttonPair = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel buttonPair = UIStyles.FlowLayoutPanels.CreateTransparent();
             buttonPair.FlowDirection = FlowDirection.LeftToRight;
             buttonPair.Anchor = AnchorStyles.None;
 

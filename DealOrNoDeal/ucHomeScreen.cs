@@ -234,7 +234,7 @@ namespace DealOrNoDeal
             // identical row heights, since an asymmetric AutoSize/Dock=Fill
             // nesting depth on only one side introduces its own small
             // rounding difference.
-            FlowLayoutPanel leftStack = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel leftStack = UIStyles.FlowLayoutPanels.CreateTransparent();
             leftStack.FlowDirection = FlowDirection.TopDown;
             leftStack.WrapContents = false;
             leftStack.BackColor = Color.Transparent;

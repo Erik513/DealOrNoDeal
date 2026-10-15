@@ -88,7 +88,7 @@ namespace DealOrNoDeal
             // UIFlowLayoutPanelFactory) centers the whole button pair as
             // one unit - same technique ucFinalChoice/ucHomeScreen use for
             // their own button pairs.
-            FlowLayoutPanel buttonRow = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel buttonRow = UIStyles.FlowLayoutPanels.CreateTransparent();
             buttonRow.FlowDirection = FlowDirection.LeftToRight;
             buttonRow.Anchor = AnchorStyles.None;
 
