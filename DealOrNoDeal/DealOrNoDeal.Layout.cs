@@ -61,7 +61,7 @@ namespace DealOrNoDeal
             root.Controls.Add(BuildRightColumn(resources), 2, 0);
 
             // Both Dock=Fill and intentionally overlap, same as
-            // pboxOfferCover/txtOfferLog - the home screen covers the
+            // txtOfferLog - the home screen covers the
             // entire game layout (not just stageHost) until Play is
             // clicked, so it needs to sit directly on ContentPanel.
             homeScreenView = new ucHomeScreen();
@@ -145,19 +145,7 @@ namespace DealOrNoDeal
             // tries to take it.
             txtOfferLog.GotFocus += (s, e) => ActiveControl = null;
 
-            pboxOfferCover = new PictureBox
-            {
-                Dock = DockStyle.Fill,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Visible = false,
-                Image = (Image)resources.GetObject("pboxAngebotÜberdecken.Image")
-            };
-
             offerContent.Controls.Add(txtOfferLog);
-            offerContent.Controls.Add(pboxOfferCover);
-            // Both are Dock=Fill and intentionally overlap - the cover is
-            // meant to hide the offer log while the video is playing.
-            pboxOfferCover.BringToFront();
 
             TableLayoutPanel highAmountStrip = BuildAmountStrip(15, 15);
 
@@ -211,7 +199,7 @@ namespace DealOrNoDeal
 
         /// <summary>
         /// A shared Dock=Fill container for all overlapping game phases
-        /// (case grid, banker video, offer, final choice). In the original
+        /// (case grid, offer, final choice). In the original
         /// layout these had different fixed pixel sizes and Anchor
         /// combinations and drifted apart when scaling - now they share
         /// exactly the same area.
@@ -224,13 +212,6 @@ namespace DealOrNoDeal
 
             TableLayoutPanel caseGrid = BuildCaseGrid(resources);
 
-            axBankerVideoPlayer = new AxWMPLib.AxWindowsMediaPlayer
-            {
-                Dock = DockStyle.Fill,
-                Enabled = true,
-                Visible = false
-            };
-
             bankerOfferView = new ucBankerOffer { Visible = false };
             caseOpeningView = new ucOpenCase { Visible = false };
             finalChoiceView = new ucFinalChoice { Visible = false };
@@ -240,7 +221,6 @@ namespace DealOrNoDeal
             // visible is controlled purely via Visible/BringToFront, not
             // via the add order.
             host.Controls.Add(caseGrid);
-            host.Controls.Add(axBankerVideoPlayer);
             host.Controls.Add(bankerOfferView);
             host.Controls.Add(caseOpeningView);
             host.Controls.Add(finalChoiceView);

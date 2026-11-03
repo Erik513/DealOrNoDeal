@@ -95,8 +95,6 @@ namespace DealOrNoDeal
         private Button lastOpenedButton;
         private bool IsGameOver;
 
-        private readonly string videoPath = "C:/Users/uif42535/OneDrive - Continental AG/Dateien/Bilder/Visual Studio/DealOrNoDealKoffer/DealersOffer.mp4";
-
         // Core controls addressed by the game logic.
         private Panel panelMyCase;
         private TableLayoutPanel caseGridPanel;
@@ -113,8 +111,6 @@ namespace DealOrNoDeal
         private readonly List<decimal> offerHistoryValues = new List<decimal>();
         private decimal? currentOfferAmount;
 
-        private PictureBox pboxOfferCover;
-        private AxWMPLib.AxWindowsMediaPlayer axBankerVideoPlayer;
         private ucBankerOffer bankerOfferView;
         private ucOpenCase caseOpeningView;
         private ucFinalChoice finalChoiceView;
@@ -334,8 +330,7 @@ namespace DealOrNoDeal
 
         /// <summary>
         /// Hides every overlapping game-phase view sharing the stage host
-        /// (banker offer, case-opening reveal, final choice, banker video,
-        /// its cover) - not gameOverView, which each caller controls
+        /// (banker offer, case-opening reveal, final choice) - not gameOverView, which each caller controls
         /// separately depending on whether it should end up shown or hidden.
         /// </summary>
         private void HideAllGameViews()
@@ -343,8 +338,6 @@ namespace DealOrNoDeal
             bankerOfferView.Visible = false;
             caseOpeningView.Visible = false;
             finalChoiceView.Visible = false;
-            axBankerVideoPlayer.Visible = false;
-            pboxOfferCover.Visible = false;
         }
 
         private void DisableAllCases()
@@ -420,8 +413,7 @@ namespace DealOrNoDeal
 
         // Dragging the window edge makes Windows send a lot of WM_SIZE
         // messages in quick succession. Without this guard, all ~90 controls
-        // (case grid, amount strips, nested TableLayoutPanels, the ActiveX
-        // video element) would be re-laid-out on EVERY single one of them -
+        // (case grid, amount strips, nested TableLayoutPanels) would be re-laid-out on EVERY single one of them -
         // that was the cause of the heavy stutter. Now the layout is only
         // rebuilt once, at the end of the resize.
         protected override void OnResizeBegin(EventArgs e)
@@ -487,28 +479,10 @@ namespace DealOrNoDeal
             currentOfferAmount = offerValue;
             SetInfoText("Game.YourOffer");
 
-            bool videoExists = File.Exists(videoPath);
-
-            if (videoExists)
-            {
-                pboxOfferCover.Visible = true;
-                axBankerVideoPlayer.Visible = true;
-                axBankerVideoPlayer.BringToFront();
-                axBankerVideoPlayer.settings.autoStart = true;
-                axBankerVideoPlayer.uiMode = "none";
-                axBankerVideoPlayer.URL = videoPath;
-                axBankerVideoPlayer.PlayStateChange += BankerVideoPlayer_PlayStateChange;
-                axBankerVideoPlayer.MouseDownEvent += BankerVideoPlayer_MouseDownEvent;
-            }
-            else
-            {
-                // No banker video found on this machine - jump straight to
-                // the offer instead of waiting on a video event that never
-                // fires. labelInfoText stays on "Game.YourOffer" (set
-                // above) until OfferRevealed actually fires.
-                bankerOfferView.Visible = true;
-                bankerOfferView.BringToFront();
-            }
+            // labelInfoText stays on "Game.YourOffer" (set above) until
+            // OfferRevealed actually fires.
+            bankerOfferView.Visible = true;
+            bankerOfferView.BringToFront();
 
             // Set behind the still-covering "calculating" overlay - not a
             // spoiler on its own. offerHistoryValues/RenderOfferLog stay
@@ -571,35 +545,6 @@ namespace DealOrNoDeal
             txtOfferLog.SelectionStart = 0;
             txtOfferLog.SelectionLength = 0;
             txtOfferLog.ScrollToCaret();
-        }
-
-        private void BankerVideoPlayer_PlayStateChange(object sender, AxWMPLib._WMPOCXEvents_PlayStateChangeEvent e)
-        {
-            if (e.newState == (int)WMPLib.WMPPlayState.wmppsStopped || e.newState == (int)WMPLib.WMPPlayState.wmppsMediaEnded)
-            {
-                ShowOfferAfterVideo();
-                axBankerVideoPlayer.PlayStateChange -= BankerVideoPlayer_PlayStateChange;
-            }
-        }
-
-        private void BankerVideoPlayer_MouseDownEvent(object sender, AxWMPLib._WMPOCXEvents_MouseDownEvent e)
-        {
-            if (e.nButton == 1)
-            {
-                axBankerVideoPlayer.Ctlcontrols.stop();
-                ShowOfferAfterVideo();
-                axBankerVideoPlayer.MouseDownEvent -= BankerVideoPlayer_MouseDownEvent;
-            }
-        }
-
-        private void ShowOfferAfterVideo()
-        {
-            // labelInfoText stays on "Game.YourOffer" (set at the top of
-            // ShowBankerOffer) until OfferRevealed actually fires.
-            bankerOfferView.Visible = true;
-            bankerOfferView.BringToFront();
-            axBankerVideoPlayer.Visible = false;
-            pboxOfferCover.Visible = false;
         }
 
         private void Case_Click(object sender, EventArgs e)

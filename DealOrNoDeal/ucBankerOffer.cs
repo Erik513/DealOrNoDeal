@@ -155,7 +155,7 @@ namespace DealOrNoDeal
             // Covers actionBar (both Dock=Fill, stacked in the same plain
             // Panel instead of a shared TableLayoutPanel cell - the same
             // "intentionally overlap" trick DealOrNoDeal.cs already uses
-            // for pboxOfferCover/txtOfferLog) so the accept/decline choice
+            // for the home screen/txtOfferLog) so the accept/decline choice
             // stays hidden - and unclickable - until the reveal delay is
             // over or the player clicks to skip it.
             labelCalculating = UIStyles.Labels.CreateTitle(AppLocalization.Get("Game.BankerCalculating"));
