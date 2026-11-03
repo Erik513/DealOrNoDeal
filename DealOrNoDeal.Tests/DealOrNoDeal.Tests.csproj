@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- The game itself is a self-contained WinExe, which the test host cannot
+       load as a project reference - so the UI-free logic is compiled into
+       this project from its source files. -->
+  <ItemGroup>
+    <Compile Include="..\DealOrNoDeal\GameState.cs" Link="Game\GameState.cs" />
+    <Compile Include="..\DealOrNoDeal\BankerOfferCalculator.cs" Link="Game\BankerOfferCalculator.cs" />
+    <Compile Include="..\DealOrNoDeal\GameHistory.cs" Link="Game\GameHistory.cs" />
+    <Compile Include="..\DealOrNoDeal\GameSettings.cs" Link="Game\GameSettings.cs" />
+    <Compile Include="..\DealOrNoDeal\AppDataStore.cs" Link="Game\AppDataStore.cs" />
+    <Compile Include="..\DealOrNoDeal\GameStrings.cs" Link="Game\GameStrings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ErikwnkWFUI\ErikwnkWFUI\ErikwnkWFUI.csproj" />
+  </ItemGroup>
+
+</Project>

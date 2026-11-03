@@ -13,7 +13,11 @@ namespace DealOrNoDeal
     /// </summary>
     internal static class AppDataStore
     {
-        private static readonly string AppFolder = Path.Combine(
+        /// <summary>
+        /// The folder the files live in - settable so that tests can point
+        /// it at a temporary folder instead of the player's real data.
+        /// </summary>
+        internal static string AppFolder { get; set; } = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "DealOrNoDeal");
 
