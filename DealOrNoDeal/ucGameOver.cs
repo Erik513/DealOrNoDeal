@@ -68,8 +68,8 @@ namespace DealOrNoDeal
             labelAmount.BackColor = Color.Transparent;
             // Plain gold, not a UIStyles.Colors tone - deliberate deviation
             // matching the game's own gold/yellow case artwork and amount
-            // buttons, same reasoning as ucOpenCase's Color.Yellow choice.
-            labelAmount.ForeColor = Color.Gold;
+            // buttons, same reasoning as GameColors.AmountInPlay.
+            labelAmount.ForeColor = GameColors.Gold;
             labelAmount.AutoEllipsis = false;
             labelAmount.Font = new Font(UIStyles.Fonts.Title.FontFamily, 66f, FontStyle.Bold);
 

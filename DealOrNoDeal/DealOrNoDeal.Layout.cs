@@ -133,8 +133,8 @@ namespace DealOrNoDeal
                 ReadOnly = true,
                 TabStop = false,
                 BorderStyle = BorderStyle.None,
-                BackColor = Color.FromArgb(64, 64, 64),
-                ForeColor = Color.Gold,
+                BackColor = GameColors.CardBackground,
+                ForeColor = GameColors.Gold,
                 Font = UIStyles.Fonts.Normal,
                 ScrollBars = RichTextBoxScrollBars.None,
                 Cursor = Cursors.Default
@@ -207,7 +207,7 @@ namespace DealOrNoDeal
         private Panel BuildStageHost(ComponentResourceManager resources)
         {
             Panel host = UIStyles.Panels.CreatePrimary();
-            host.BackColor = Color.Gold;
+            host.BackColor = GameColors.Gold;
             host.Padding = new Padding(4);
 
             TableLayoutPanel caseGrid = BuildCaseGrid(resources);
@@ -233,7 +233,7 @@ namespace DealOrNoDeal
         {
             TableLayoutPanel grid = UIStyles.TableLayoutPanels.CreateDark(5, 6);
             grid.Dock = DockStyle.Fill;
-            grid.BackColor = Color.FromArgb(64, 64, 64);
+            grid.BackColor = GameColors.CardBackground;
             grid.ColumnStyles.Clear();
             grid.RowStyles.Clear();
 
@@ -298,8 +298,8 @@ namespace DealOrNoDeal
                 amountButton.Margin = new Padding(4);
                 amountButton.TabStop = false;
                 amountButton.Cursor = Cursors.Default;
-                amountButton.ForeColor = Color.Black;
-                SetAmountButtonColor(amountButton, Color.Yellow);
+                amountButton.ForeColor = GameColors.AmountText;
+                SetAmountButtonColor(amountButton, GameColors.AmountInPlay);
 
                 strip.Controls.Add(amountButton, 0, i);
                 buttonList.Add(amountButton);
@@ -334,20 +334,20 @@ namespace DealOrNoDeal
         private Panel BuildCard(string title, out Panel content, out Label titleLabel)
         {
             Panel card = UIStyles.Panels.CreatePrimary();
-            card.BackColor = Color.Gold;
+            card.BackColor = GameColors.Gold;
             card.Padding = new Padding(2);
 
             Panel innerContent = UIStyles.Panels.CreateDark();
             innerContent.Dock = DockStyle.Fill;
-            innerContent.BackColor = Color.FromArgb(64, 64, 64);
+            innerContent.BackColor = GameColors.CardBackground;
             innerContent.Padding = new Padding(6);
 
             titleLabel = UIStyles.Labels.CreateTitle(title);
             titleLabel.Dock = DockStyle.Top;
             titleLabel.Height = 30;
             titleLabel.TextAlign = ContentAlignment.MiddleCenter;
-            titleLabel.BackColor = Color.FromArgb(64, 64, 64);
-            titleLabel.ForeColor = Color.Gold;
+            titleLabel.BackColor = GameColors.CardBackground;
+            titleLabel.ForeColor = GameColors.Gold;
 
             card.Controls.Add(innerContent);
             card.Controls.Add(titleLabel);

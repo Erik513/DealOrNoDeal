@@ -86,7 +86,7 @@ namespace DealOrNoDeal
             // Plain bright yellow, matching the "still in play" amount
             // buttons in the side strips - UIStyles.Colors.Yellow is a much
             // darker amber/orange tone and looked out of place here.
-            labelCaseAmount.BackColor = Color.Yellow;
+            labelCaseAmount.BackColor = GameColors.AmountInPlay;
             labelCaseAmount.ForeColor = UIStyles.Colors.BackgroundBlack;
             labelCaseAmount.Padding = new Padding(16, 8, 16, 8);
             labelCaseAmount.Visible = false;

@@ -259,7 +259,7 @@ namespace DealOrNoDeal
 
             foreach (Button amountButton in buttonList)
             {
-                SetAmountButtonColor(amountButton, Color.Yellow);
+                SetAmountButtonColor(amountButton, GameColors.AmountInPlay);
                 amountButton.Enabled = true;
             }
 
@@ -468,7 +468,7 @@ namespace DealOrNoDeal
                 txtOfferLog.SelectionFont = new Font(
                     UIStyles.Fonts.Normal.FontFamily,
                     isLatest ? 13f : UIStyles.Fonts.Normal.Size);
-                txtOfferLog.SelectionColor = Color.Gold;
+                txtOfferLog.SelectionColor = GameColors.Gold;
                 txtOfferLog.AppendText(AppCurrencyFormatter.Format(offerHistoryValues[i]) + Environment.NewLine);
             }
 
@@ -525,7 +525,7 @@ namespace DealOrNoDeal
 
         private void CaseOpeningView_AnimationCompleted(object sender, EventArgs e)
         {
-            SetAmountButtonColor(lastOpenedButton, Color.Olive);
+            SetAmountButtonColor(lastOpenedButton, GameColors.AmountOpened);
         }
 
         private void CaseOpeningView_CaseOpenedCompleted(object sender, EventArgs e)
@@ -632,7 +632,7 @@ namespace DealOrNoDeal
             foreach (Button amountButton in buttonList)
             {
                 if (amountButton.Text != wonAmount)
-                    SetAmountButtonColor(amountButton, Color.Olive);
+                    SetAmountButtonColor(amountButton, GameColors.AmountOpened);
             }
 
             HideAllGameViews();
