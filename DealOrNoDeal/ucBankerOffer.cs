@@ -176,17 +176,8 @@ namespace DealOrNoDeal
             calculatingLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             calculatingLayout.Controls.Add(labelCalculating, 0, 1);
 
-            // Same footer style/position as ucOpenCase's "click to
-            // skip"/"click to close" prompt - plain gray, docked to the
-            // very bottom of the control - instead of sitting right under
-            // the calculating text like a caption.
-            labelCalculatingSkipHint = UIStyles.Labels.CreateStandard(AppLocalization.Get(TextKeys.BankerOffer.ClickToSkip));
-            labelCalculatingSkipHint.Dock = DockStyle.Bottom;
-            labelCalculatingSkipHint.Height = 32;
-            labelCalculatingSkipHint.TextAlign = ContentAlignment.MiddleCenter;
-            labelCalculatingSkipHint.BackColor = Color.Transparent;
-            labelCalculatingSkipHint.ForeColor = UIStyles.Colors.TextMuted;
-            labelCalculatingSkipHint.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 11f);
+            labelCalculatingSkipHint = ClickHint.Create(
+                AppLocalization.Get(TextKeys.BankerOffer.ClickToSkip), (s, e) => RevealOffer());
 
             panelCalculating = UIStyles.Panels.CreateElevated();
             panelCalculating.Dock = DockStyle.Fill;
@@ -200,7 +191,6 @@ namespace DealOrNoDeal
             panelCalculating.Click += (s, e) => RevealOffer();
             calculatingLayout.Click += (s, e) => RevealOffer();
             labelCalculating.Click += (s, e) => RevealOffer();
-            labelCalculatingSkipHint.Click += (s, e) => RevealOffer();
 
             Panel actionBarHost = UIStyles.Panels.CreateTransparent();
             actionBarHost.Dock = DockStyle.Fill;

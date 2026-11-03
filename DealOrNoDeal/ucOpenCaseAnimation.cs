@@ -40,7 +40,6 @@ namespace DealOrNoDeal
         private readonly Image caseClosedImage;
         private readonly Image caseOpenImage;
         private readonly Label labelCaseAmount;
-        private readonly Panel panelClosePrompt;
         private readonly Label labelClickToClose;
         private readonly Timer animationTimer;
 
@@ -92,24 +91,11 @@ namespace DealOrNoDeal
             labelCaseAmount.Visible = false;
             labelCaseAmount.Click += UcOpenCase_Click;
 
-            labelClickToClose = UIStyles.Labels.CreateStandard(AppLocalization.Get(TextKeys.OpenCase.ClickToSkip));
-            labelClickToClose.Dock = DockStyle.Fill;
-            labelClickToClose.TextAlign = ContentAlignment.MiddleCenter;
-            labelClickToClose.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 12.75f);
-            // Plain gray, not gold - matches the same "click to skip" hint
-            // on the banker-offer screen for a consistent look.
-            labelClickToClose.ForeColor = UIStyles.Colors.TextMuted;
-            labelClickToClose.Click += UcOpenCase_Click;
-
-            panelClosePrompt = UIStyles.Panels.CreateTransparent();
-            panelClosePrompt.Dock = DockStyle.Bottom;
-            panelClosePrompt.Height = 46;
-            panelClosePrompt.Visible = false;
-            panelClosePrompt.Controls.Add(labelClickToClose);
-            panelClosePrompt.Click += UcOpenCase_Click;
+            labelClickToClose = ClickHint.Create(AppLocalization.Get(TextKeys.OpenCase.ClickToSkip), UcOpenCase_Click);
+            labelClickToClose.Visible = false;
 
             Controls.Add(pictureBoxCase);
-            Controls.Add(panelClosePrompt);
+            Controls.Add(labelClickToClose);
             Controls.Add(labelCaseAmount);
 
             animationTimer = new Timer { Interval = NormalIntervalMs };
@@ -174,8 +160,8 @@ namespace DealOrNoDeal
             // Visible for the whole animation (not just after the reveal),
             // so the player knows from the start that clicking skips ahead.
             labelClickToClose.Text = AppLocalization.Get(TextKeys.OpenCase.ClickToSkip);
-            panelClosePrompt.Visible = true;
-            panelClosePrompt.BringToFront();
+            labelClickToClose.Visible = true;
+            labelClickToClose.BringToFront();
         }
 
         private void StopAnimation()
@@ -222,8 +208,8 @@ namespace DealOrNoDeal
             // offset for the opened case actually takes effect.
             CenterPictureBox();
             labelClickToClose.Text = AppLocalization.Get(TextKeys.OpenCase.ClickToClose);
-            panelClosePrompt.Visible = true;
-            panelClosePrompt.BringToFront();
+            labelClickToClose.Visible = true;
+            labelClickToClose.BringToFront();
             labelCaseAmount.Visible = true;
             CenterAmountLabel();
             labelCaseAmount.BringToFront();
