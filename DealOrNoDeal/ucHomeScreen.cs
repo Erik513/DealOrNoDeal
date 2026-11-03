@@ -9,6 +9,9 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ListView = ErikwnkWFUI.Controls.ListView;
 using ComboBox = System.Windows.Forms.ComboBox;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
+using Panel = System.Windows.Forms.Panel;
+using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace DealOrNoDeal
 {
@@ -214,7 +217,7 @@ namespace DealOrNoDeal
             // own AutoSize width up to RightColumnWidth on their own, so
             // give it a matching floor instead.
             settingsTable.MinimumSize = new Size(RightColumnWidth, 0);
-            RebuildSettingsRows();
+            AddSettingsRows();
 
             labelSettingsTitle = CreateTableTitleLabel(AppLocalization.Get("Home.SettingsTitle"));
             Control settingsBlock = CreateTitledTable(labelSettingsTitle, settingsTable);
@@ -308,7 +311,6 @@ namespace DealOrNoDeal
             labelSettingsTitle.Text = AppLocalization.Get("Home.SettingsTitle");
             labelAllTimeBestName.Text = AppLocalization.Get("Home.AllTimeBestRow");
             SetHistoryColumns();
-            RebuildSettingsRows();
             RefreshRecordsDisplay();
         }
 
@@ -353,11 +355,13 @@ namespace DealOrNoDeal
                 historyTable.Items.Add(new ListViewItem(row));
         }
 
-        private void RebuildSettingsRows()
+        // Labels as functions: the table follows a language switch by itself.
+        // ClearRows + AddRow in the language handler would take the combo in
+        // use (open drop-down, focus) out of the table.
+        private void AddSettingsRows()
         {
-            settingsTable.ClearRows();
-            settingsTable.AddRow(AppLocalization.Get("Options.Language"), languageCombo);
-            settingsTable.AddRow(AppLocalization.Get("Options.Currency"), currencyCombo);
+            settingsTable.AddRow(() => AppLocalization.Get("Options.Language"), languageCombo);
+            settingsTable.AddRow(() => AppLocalization.Get("Options.Currency"), currencyCombo);
         }
 
         private static Label CreateTableTitleLabel(string text)

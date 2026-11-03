@@ -17,7 +17,7 @@ using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
 
 namespace DealOrNoDeal
 {
-    public partial class DealOrNoDeal : StyledForm
+    public partial class DealOrNoDeal : AppForm
     {
         // Money amounts for the 30 cases, in case-1..30 order. Plain
         // numbers, not pre-formatted strings - display text (with the
@@ -163,7 +163,7 @@ namespace DealOrNoDeal
         }
 
         public DealOrNoDeal()
-            : base(StyledFormOptions.CreateStandard("DealOrNoDeal", titleTextAlign: ContentAlignment.MiddleLeft, icon: LoadAppIcon()))
+            : base(FormOptions.CreateStandard("DealOrNoDeal", titleTextAlign: ContentAlignment.MiddleLeft, icon: LoadAppIcon()))
         {
             InitializeComponent();
             InitializeCaseAmounts();
@@ -367,7 +367,7 @@ namespace DealOrNoDeal
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning,
                 this,
-                MessageBoxSize.Small);
+                FormSize.Small);
 
             if (result == DialogResult.Yes)
                 ReturnToMainMenu();
