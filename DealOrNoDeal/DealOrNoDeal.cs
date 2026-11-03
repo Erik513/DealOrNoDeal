@@ -107,7 +107,7 @@ namespace DealOrNoDeal
         {
             InitializeComponent();
 
-            SetInfoText("Game.ChooseCase");
+            SetInfoText(TextKeys.Game.ChooseCase);
             selectedCase = null;
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
@@ -148,13 +148,13 @@ namespace DealOrNoDeal
         /// </summary>
         private void RefreshLanguage()
         {
-            labelMyCaseTitle.Text = AppLocalization.Get("Game.MyCaseLabel");
-            labelOffersTitle.Text = AppLocalization.Get("Game.OffersLabel");
+            labelMyCaseTitle.Text = AppLocalization.Get(TextKeys.Game.MyCaseLabel);
+            labelOffersTitle.Text = AppLocalization.Get(TextKeys.Game.OffersLabel);
 
             if (currentInfoTextKey != null)
                 labelInfoText.Text = AppLocalization.Get(currentInfoTextKey, currentInfoTextArgs);
 
-            UIStyles.Buttons.UpdateTooltip(btnMainMenu, AppLocalization.Get("Game.MainMenuButton"));
+            UIStyles.Buttons.UpdateTooltip(btnMainMenu, AppLocalization.Get(TextKeys.Game.MainMenuButton));
 
             bankerOfferView.RefreshLanguage();
             finalChoiceView.RefreshLanguage();
@@ -209,7 +209,7 @@ namespace DealOrNoDeal
                 return;
 
             finalChoiceView.Visible = false;
-            SetInfoText("Game.YourCase");
+            SetInfoText(TextKeys.Game.YourCase);
 
             int caseNumber = caseNumbers[caseBox];
             pendingFinalResult = new GameResult(
@@ -266,7 +266,7 @@ namespace DealOrNoDeal
             HideAllGameViews();
             gameOverView.Visible = false;
 
-            SetInfoText("Game.ChooseCase");
+            SetInfoText(TextKeys.Game.ChooseCase);
         }
 
         /// <summary>
@@ -301,8 +301,8 @@ namespace DealOrNoDeal
         private void ConfirmReturnToMainMenu()
         {
             DialogResult result = MessageBox.Show(
-                AppLocalization.Get("Game.ConfirmMainMenuMessage"),
-                AppLocalization.Get("Game.ConfirmMainMenuTitle"),
+                AppLocalization.Get(TextKeys.Game.ConfirmMainMenuMessage),
+                AppLocalization.Get(TextKeys.Game.ConfirmMainMenuTitle),
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning,
                 this,
@@ -412,7 +412,7 @@ namespace DealOrNoDeal
         private void ShowBankerOffer(decimal offerValue)
         {
             currentOfferAmount = offerValue;
-            SetInfoText("Game.YourOffer");
+            SetInfoText(TextKeys.Game.YourOffer);
 
             // labelInfoText stays on "Game.YourOffer" (set above) until
             // OfferRevealed actually fires.
@@ -438,7 +438,7 @@ namespace DealOrNoDeal
         /// </summary>
         private void HandleOfferRevealed()
         {
-            SetInfoText("Game.AcceptOrContinue");
+            SetInfoText(TextKeys.Game.AcceptOrContinue);
 
             if (currentOfferAmount.HasValue)
             {
@@ -552,7 +552,7 @@ namespace DealOrNoDeal
         private void UpdateInfoText()
         {
             int casesToOpen = state.NextCasesToOpen();
-            string key = casesToOpen == 1 ? "Game.OpenMoreCaseSingular" : "Game.OpenMoreCases";
+            string key = casesToOpen == 1 ? TextKeys.Game.OpenMoreCaseSingular : TextKeys.Game.OpenMoreCases;
             SetInfoText(key, casesToOpen);
         }
 
@@ -594,7 +594,7 @@ namespace DealOrNoDeal
 
             finalChoiceView.Visible = true;
             finalChoiceView.BringToFront();
-            SetInfoText("Game.MakeDecision");
+            SetInfoText(TextKeys.Game.MakeDecision);
         }
 
         /// <summary>
@@ -638,7 +638,7 @@ namespace DealOrNoDeal
             HideAllGameViews();
             currentOfferAmount = null;
 
-            SetInfoText("Game.Over");
+            SetInfoText(TextKeys.Game.Over);
 
             gameOverView.ShowResult(wonAmount);
 

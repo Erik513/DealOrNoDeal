@@ -46,6 +46,20 @@ public class GameStringsTests
         Assert.Equal("Open 1 more case until the banker's offer!", string.Format(GameStrings.English["Game.OpenMoreCaseSingular"], 1));
     }
 
+    [Fact]
+    public void EveryKeyConstant_HasATextInBothLanguages_AndEveryTextHasAConstant()
+    {
+        string[] constants = typeof(TextKeys).GetNestedTypes()
+            .SelectMany(group => group.GetFields())
+            .Select(field => (string)field.GetRawConstantValue())
+            .ToArray();
+
+        Assert.Equal(constants.Length, constants.Distinct().Count());
+        Assert.Empty(constants.Except(GameStrings.English.Keys));
+        Assert.Empty(constants.Except(GameStrings.German.Keys));
+        Assert.Empty(GameStrings.English.Keys.Except(constants));
+    }
+
     private static string[] Placeholders(string text) =>
         Regex.Matches(text, @"\{\d+\}").Select(m => m.Value).OrderBy(v => v).ToArray();
 }

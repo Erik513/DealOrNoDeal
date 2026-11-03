@@ -119,7 +119,7 @@ namespace DealOrNoDeal
             amountCell.ColumnStyles.Clear();
             amountCell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            labelOfferAmount = UIStyles.Labels.CreateTitle(AppLocalization.Get("BankerOffer.Placeholder"));
+            labelOfferAmount = UIStyles.Labels.CreateTitle(AppLocalization.Get(TextKeys.BankerOffer.Placeholder));
             labelOfferAmount.AutoSize = true;
             labelOfferAmount.Anchor = AnchorStyles.None;
             labelOfferAmount.TextAlign = ContentAlignment.MiddleCenter;
@@ -158,7 +158,7 @@ namespace DealOrNoDeal
             // for the home screen/txtOfferLog) so the accept/decline choice
             // stays hidden - and unclickable - until the reveal delay is
             // over or the player clicks to skip it.
-            labelCalculating = UIStyles.Labels.CreateTitle(AppLocalization.Get("Game.BankerCalculating"));
+            labelCalculating = UIStyles.Labels.CreateTitle(AppLocalization.Get(TextKeys.Game.BankerCalculating));
             labelCalculating.AutoSize = true;
             labelCalculating.Anchor = AnchorStyles.None;
             labelCalculating.TextAlign = ContentAlignment.MiddleCenter;
@@ -180,7 +180,7 @@ namespace DealOrNoDeal
             // skip"/"click to close" prompt - plain gray, docked to the
             // very bottom of the control - instead of sitting right under
             // the calculating text like a caption.
-            labelCalculatingSkipHint = UIStyles.Labels.CreateStandard(AppLocalization.Get("BankerOffer.ClickToSkip"));
+            labelCalculatingSkipHint = UIStyles.Labels.CreateStandard(AppLocalization.Get(TextKeys.BankerOffer.ClickToSkip));
             labelCalculatingSkipHint.Dock = DockStyle.Bottom;
             labelCalculatingSkipHint.Height = 32;
             labelCalculatingSkipHint.TextAlign = ContentAlignment.MiddleCenter;
@@ -285,26 +285,26 @@ namespace DealOrNoDeal
         public void RefreshLanguage()
         {
             if (!hasRealOffer)
-                labelOfferAmount.Text = AppLocalization.Get("BankerOffer.Placeholder");
+                labelOfferAmount.Text = AppLocalization.Get(TextKeys.BankerOffer.Placeholder);
 
             if (hasCasesInfo)
                 UpdateCasesUntilNextLabel();
 
-            labelCalculating.Text = AppLocalization.Get("Game.BankerCalculating");
-            labelCalculatingSkipHint.Text = AppLocalization.Get("BankerOffer.ClickToSkip");
+            labelCalculating.Text = AppLocalization.Get(TextKeys.Game.BankerCalculating);
+            labelCalculatingSkipHint.Text = AppLocalization.Get(TextKeys.BankerOffer.ClickToSkip);
         }
 
         private void UpdateCasesUntilNextLabel()
         {
             if (!casesUntilNextOffer.HasValue)
             {
-                labelCasesUntilNext.Text = AppLocalization.Get("BankerOffer.FinalOffer");
+                labelCasesUntilNext.Text = AppLocalization.Get(TextKeys.BankerOffer.FinalOffer);
                 return;
             }
 
             string key = casesUntilNextOffer.Value == 1
-                ? "BankerOffer.CaseUntilNextSingular"
-                : "BankerOffer.CasesUntilNext";
+                ? TextKeys.BankerOffer.CaseUntilNextSingular
+                : TextKeys.BankerOffer.CasesUntilNext;
             labelCasesUntilNext.Text = AppLocalization.Get(key, casesUntilNextOffer.Value);
         }
 

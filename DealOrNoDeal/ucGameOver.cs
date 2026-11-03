@@ -56,7 +56,7 @@ namespace DealOrNoDeal
             // AutoSize control in its TableLayoutPanel cell) size each row
             // to exactly fit its text, regardless of font/DPI - a fixed
             // pixel row height clipped these at some sizes.
-            labelPrefix = UIStyles.Labels.CreateTitle(AppLocalization.Get("GameOver.Prefix"));
+            labelPrefix = UIStyles.Labels.CreateTitle(AppLocalization.Get(TextKeys.GameOver.Prefix));
             labelPrefix.AutoSize = true;
             labelPrefix.Anchor = AnchorStyles.None;
             labelPrefix.BackColor = Color.Transparent;
@@ -92,12 +92,12 @@ namespace DealOrNoDeal
             buttonRow.FlowDirection = FlowDirection.LeftToRight;
             buttonRow.Anchor = AnchorStyles.None;
 
-            btnMainMenu = UIStyles.Buttons.CreateStandard(AppLocalization.Get("GameOver.MainMenu"), size: new Size(200, 64));
+            btnMainMenu = UIStyles.Buttons.CreateStandard(AppLocalization.Get(TextKeys.GameOver.MainMenu), size: new Size(200, 64));
             btnMainMenu.Margin = new Padding(0, 0, 20, 0);
             btnMainMenu.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 16f, FontStyle.Bold);
             btnMainMenu.Click += (s, e) => MainMenuClicked?.Invoke(this, EventArgs.Empty);
 
-            btnRestart = UIStyles.Buttons.CreatePrimary(AppLocalization.Get("GameOver.Restart"), size: new Size(200, 64));
+            btnRestart = UIStyles.Buttons.CreatePrimary(AppLocalization.Get(TextKeys.GameOver.Restart), size: new Size(200, 64));
             btnRestart.Margin = new Padding(0);
             btnRestart.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 16f, FontStyle.Bold);
             btnRestart.Click += (s, e) => RestartClicked?.Invoke(this, EventArgs.Empty);
@@ -121,7 +121,7 @@ namespace DealOrNoDeal
         public void ShowOwnCaseAmount(string amountText)
         {
             ownCaseAmountText = amountText;
-            labelOwnCase.Text = AppLocalization.Get("GameOver.OwnCaseContained", amountText);
+            labelOwnCase.Text = AppLocalization.Get(TextKeys.GameOver.OwnCaseContained, amountText);
             labelOwnCase.Visible = true;
         }
 
@@ -133,12 +133,12 @@ namespace DealOrNoDeal
 
         public void RefreshLanguage()
         {
-            labelPrefix.Text = AppLocalization.Get("GameOver.Prefix");
-            btnRestart.Text = AppLocalization.Get("GameOver.Restart");
-            btnMainMenu.Text = AppLocalization.Get("GameOver.MainMenu");
+            labelPrefix.Text = AppLocalization.Get(TextKeys.GameOver.Prefix);
+            btnRestart.Text = AppLocalization.Get(TextKeys.GameOver.Restart);
+            btnMainMenu.Text = AppLocalization.Get(TextKeys.GameOver.MainMenu);
 
             if (ownCaseAmountText != null)
-                labelOwnCase.Text = AppLocalization.Get("GameOver.OwnCaseContained", ownCaseAmountText);
+                labelOwnCase.Text = AppLocalization.Get(TextKeys.GameOver.OwnCaseContained, ownCaseAmountText);
         }
     }
 }

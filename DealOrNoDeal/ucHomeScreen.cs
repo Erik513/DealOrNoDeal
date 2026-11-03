@@ -155,7 +155,7 @@ namespace DealOrNoDeal
             historyTable.HeaderFont = new Font(UIStyles.Fonts.Normal.FontFamily, TableHeaderFontSize, FontStyle.Bold);
             SetHistoryColumns();
 
-            labelHistoryTitle = CreateTableTitleLabel(AppLocalization.Get("Home.HistoryTitle"));
+            labelHistoryTitle = CreateTableTitleLabel(AppLocalization.Get(TextKeys.Home.HistoryTitle));
 
             (Control historyWithAllTimeBest, Label allTimeBestName, Label allTimeBestCase, Label allTimeBestAmount) =
                 CreateHistoryTableWithAllTimeBest();
@@ -163,7 +163,7 @@ namespace DealOrNoDeal
             labelAllTimeBestCase = allTimeBestCase;
             labelAllTimeBestAmount = allTimeBestAmount;
 
-            labelAllTimeBestName.Text = AppLocalization.Get("Home.AllTimeBestRow");
+            labelAllTimeBestName.Text = AppLocalization.Get(TextKeys.Home.AllTimeBestRow);
             allTimeBestToolTip = UIStyles.ToolTips.CreateToolTip();
 
             Control historyBlock = CreateTitledTable(labelHistoryTitle, historyWithAllTimeBest);
@@ -219,11 +219,11 @@ namespace DealOrNoDeal
             settingsTable.MinimumSize = new Size(RightColumnWidth, 0);
             AddSettingsRows();
 
-            labelSettingsTitle = CreateTableTitleLabel(AppLocalization.Get("Home.SettingsTitle"));
+            labelSettingsTitle = CreateTableTitleLabel(AppLocalization.Get(TextKeys.Home.SettingsTitle));
             Control settingsBlock = CreateTitledTable(labelSettingsTitle, settingsTable);
             settingsBlock.Margin = new Padding(0, 0, 0, RightColumnItemGap);
 
-            btnPlay = UIStyles.Buttons.CreatePrimary(AppLocalization.Get("Home.PlayButton"), size: PlayButtonSize);
+            btnPlay = UIStyles.Buttons.CreatePrimary(AppLocalization.Get(TextKeys.Home.PlayButton), size: PlayButtonSize);
             btnPlay.Margin = new Padding(0);
             btnPlay.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 15f, FontStyle.Bold);
             btnPlay.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -304,12 +304,12 @@ namespace DealOrNoDeal
 
         public void RefreshLanguage()
         {
-            btnPlay.Text = AppLocalization.Get("Home.PlayButton");
-            labelHistoryTitle.Text = AppLocalization.Get("Home.HistoryTitle");
-            labelInstructionsTitle.Text = AppLocalization.Get("Home.InstructionsTitle");
-            labelInstructionsBody.Text = AppLocalization.Get("Home.InstructionsBody");
-            labelSettingsTitle.Text = AppLocalization.Get("Home.SettingsTitle");
-            labelAllTimeBestName.Text = AppLocalization.Get("Home.AllTimeBestRow");
+            btnPlay.Text = AppLocalization.Get(TextKeys.Home.PlayButton);
+            labelHistoryTitle.Text = AppLocalization.Get(TextKeys.Home.HistoryTitle);
+            labelInstructionsTitle.Text = AppLocalization.Get(TextKeys.Home.InstructionsTitle);
+            labelInstructionsBody.Text = AppLocalization.Get(TextKeys.Home.InstructionsBody);
+            labelSettingsTitle.Text = AppLocalization.Get(TextKeys.Home.SettingsTitle);
+            labelAllTimeBestName.Text = AppLocalization.Get(TextKeys.Home.AllTimeBestRow);
             SetHistoryColumns();
             RefreshRecordsDisplay();
         }
@@ -317,9 +317,9 @@ namespace DealOrNoDeal
         private void SetHistoryColumns()
         {
             historyTable.Columns.Clear();
-            historyTable.Columns.Add(AppLocalization.Get("Home.DateColumn"), HistoryDateColumnWidth);
-            historyTable.Columns.Add(AppLocalization.Get("Home.CaseColumn"), HistoryCaseColumnWidth);
-            historyTable.Columns.Add(AppLocalization.Get("Home.ResultColumn"), HistoryResultColumnWidth);
+            historyTable.Columns.Add(AppLocalization.Get(TextKeys.Home.DateColumn), HistoryDateColumnWidth);
+            historyTable.Columns.Add(AppLocalization.Get(TextKeys.Home.CaseColumn), HistoryCaseColumnWidth);
+            historyTable.Columns.Add(AppLocalization.Get(TextKeys.Home.ResultColumn), HistoryResultColumnWidth);
         }
 
         // Despite the name, this refreshes more than currency formatting -
@@ -360,8 +360,8 @@ namespace DealOrNoDeal
         // use (open drop-down, focus) out of the table.
         private void AddSettingsRows()
         {
-            settingsTable.AddRow(() => AppLocalization.Get("Options.Language"), languageCombo);
-            settingsTable.AddRow(() => AppLocalization.Get("Options.Currency"), currencyCombo);
+            settingsTable.AddRow(() => AppLocalization.Get(TextKeys.Options.Language), languageCombo);
+            settingsTable.AddRow(() => AppLocalization.Get(TextKeys.Options.Currency), currencyCombo);
         }
 
         private static Label CreateTableTitleLabel(string text)
@@ -401,7 +401,7 @@ namespace DealOrNoDeal
             wrapper.RowStyles.Add(new RowStyle(SizeType.Absolute, TableTitleRowHeight));
             wrapper.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            Label titleLabel = CreateTableTitleLabel(AppLocalization.Get("Home.InstructionsTitle"));
+            Label titleLabel = CreateTableTitleLabel(AppLocalization.Get(TextKeys.Home.InstructionsTitle));
             titleLabel.Anchor = AnchorStyles.None;
             wrapper.Controls.Add(titleLabel, 0, 0);
 
@@ -419,7 +419,7 @@ namespace DealOrNoDeal
             // explicitly here to force it to wrap within the box.
             Label bodyLabel = new Label
             {
-                Text = AppLocalization.Get("Home.InstructionsBody"),
+                Text = AppLocalization.Get(TextKeys.Home.InstructionsBody),
                 AutoSize = true,
                 MaximumSize = new Size(RightColumnWidth - box.Padding.Horizontal, 0),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,

@@ -32,6 +32,7 @@
     <Compile Include="..\DealOrNoDeal\GameSettings.cs" Link="Game\GameSettings.cs" />
     <Compile Include="..\DealOrNoDeal\AppDataStore.cs" Link="Game\AppDataStore.cs" />
     <Compile Include="..\DealOrNoDeal\GameStrings.cs" Link="Game\GameStrings.cs" />
+    <Compile Include="..\DealOrNoDeal\TextKeys.cs" Link="Game\TextKeys.cs" />
   </ItemGroup>
 
   <ItemGroup>

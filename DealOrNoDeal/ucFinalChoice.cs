@@ -49,12 +49,12 @@ namespace DealOrNoDeal
             buttonPair.FlowDirection = FlowDirection.LeftToRight;
             buttonPair.Anchor = AnchorStyles.None;
 
-            btnKeep = UIStyles.Buttons.CreatePrimary(AppLocalization.Get("FinalChoice.Keep"), size: ButtonSize);
+            btnKeep = UIStyles.Buttons.CreatePrimary(AppLocalization.Get(TextKeys.FinalChoice.Keep), size: ButtonSize);
             btnKeep.Margin = new Padding(0, 0, ButtonGap, 0);
             btnKeep.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 22f, FontStyle.Bold);
             btnKeep.Click += BtnKeep_Click;
 
-            btnSwap = UIStyles.Buttons.CreateRed(AppLocalization.Get("FinalChoice.Swap"), size: ButtonSize);
+            btnSwap = UIStyles.Buttons.CreateRed(AppLocalization.Get(TextKeys.FinalChoice.Swap), size: ButtonSize);
             btnSwap.Margin = new Padding(0);
             btnSwap.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 22f, FontStyle.Bold);
             btnSwap.Click += BtnSwap_Click;
@@ -66,7 +66,7 @@ namespace DealOrNoDeal
             hintPanel.Dock = DockStyle.Bottom;
             hintPanel.Height = 75;
 
-            labelPrompt = UIStyles.Labels.CreateStandard(AppLocalization.Get("FinalChoice.Prompt"));
+            labelPrompt = UIStyles.Labels.CreateStandard(AppLocalization.Get(TextKeys.FinalChoice.Prompt));
             labelPrompt.Dock = DockStyle.Fill;
             labelPrompt.TextAlign = ContentAlignment.MiddleCenter;
             labelPrompt.Font = new Font(UIStyles.Fonts.Title.FontFamily, 15.75f);
@@ -81,9 +81,9 @@ namespace DealOrNoDeal
 
         public void RefreshLanguage()
         {
-            labelPrompt.Text = AppLocalization.Get("FinalChoice.Prompt");
-            btnKeep.Text = AppLocalization.Get("FinalChoice.Keep");
-            btnSwap.Text = AppLocalization.Get("FinalChoice.Swap");
+            labelPrompt.Text = AppLocalization.Get(TextKeys.FinalChoice.Prompt);
+            btnKeep.Text = AppLocalization.Get(TextKeys.FinalChoice.Keep);
+            btnSwap.Text = AppLocalization.Get(TextKeys.FinalChoice.Swap);
         }
 
         private void BtnKeep_Click(object sender, EventArgs e)

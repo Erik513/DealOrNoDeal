@@ -92,7 +92,7 @@ namespace DealOrNoDeal
             labelCaseAmount.Visible = false;
             labelCaseAmount.Click += UcOpenCase_Click;
 
-            labelClickToClose = UIStyles.Labels.CreateStandard(AppLocalization.Get("OpenCase.ClickToSkip"));
+            labelClickToClose = UIStyles.Labels.CreateStandard(AppLocalization.Get(TextKeys.OpenCase.ClickToSkip));
             labelClickToClose.Dock = DockStyle.Fill;
             labelClickToClose.TextAlign = ContentAlignment.MiddleCenter;
             labelClickToClose.Font = new Font(UIStyles.Fonts.Normal.FontFamily, 12.75f);
@@ -135,7 +135,7 @@ namespace DealOrNoDeal
         public void RefreshLanguage()
         {
             labelClickToClose.Text = AppLocalization.Get(
-                animationIsOver ? "OpenCase.ClickToClose" : "OpenCase.ClickToSkip");
+                animationIsOver ? TextKeys.OpenCase.ClickToClose : TextKeys.OpenCase.ClickToSkip);
         }
 
         private void UcOpenCase_VisibleChanged(object sender, EventArgs e)
@@ -173,7 +173,7 @@ namespace DealOrNoDeal
 
             // Visible for the whole animation (not just after the reveal),
             // so the player knows from the start that clicking skips ahead.
-            labelClickToClose.Text = AppLocalization.Get("OpenCase.ClickToSkip");
+            labelClickToClose.Text = AppLocalization.Get(TextKeys.OpenCase.ClickToSkip);
             panelClosePrompt.Visible = true;
             panelClosePrompt.BringToFront();
         }
@@ -221,7 +221,7 @@ namespace DealOrNoDeal
             // Re-center now that animationIsOver is true, so the downward
             // offset for the opened case actually takes effect.
             CenterPictureBox();
-            labelClickToClose.Text = AppLocalization.Get("OpenCase.ClickToClose");
+            labelClickToClose.Text = AppLocalization.Get(TextKeys.OpenCase.ClickToClose);
             panelClosePrompt.Visible = true;
             panelClosePrompt.BringToFront();
             labelCaseAmount.Visible = true;

@@ -85,7 +85,7 @@ namespace DealOrNoDeal
             column.RowStyles.Add(new RowStyle(SizeType.Absolute, TopCardRowHeight));
             column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            Panel myCaseCard = BuildCard(AppLocalization.Get("Game.MyCaseLabel"), out Panel myCaseContent, out labelMyCaseTitle);
+            Panel myCaseCard = BuildCard(AppLocalization.Get(TextKeys.Game.MyCaseLabel), out Panel myCaseContent, out labelMyCaseTitle);
             panelMyCase = myCaseContent;
             // selectedCase is a fixed size, not Dock=Fill, so it doesn't
             // automatically stay centered when the window (and so
@@ -115,7 +115,7 @@ namespace DealOrNoDeal
             column.RowStyles.Add(new RowStyle(SizeType.Absolute, TopCardRowHeight));
             column.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            Panel offerCard = BuildCard(AppLocalization.Get("Game.OffersLabel"), out Panel offerContent, out labelOffersTitle);
+            Panel offerCard = BuildCard(AppLocalization.Get(TextKeys.Game.OffersLabel), out Panel offerContent, out labelOffersTitle);
 
             // Plain TextBox can't format individual lines - a RichTextBox
             // lets the newest offer stand out (larger) from the older ones
@@ -180,7 +180,7 @@ namespace DealOrNoDeal
             // in-progress game entirely, so it needs a confirmation instead
             // of acting immediately like the old "restart in place" button
             // did.
-            btnMainMenu = UIStyles.Buttons.CreateStandard("⌂", AppLocalization.Get("Game.MainMenuButton"));
+            btnMainMenu = UIStyles.Buttons.CreateStandard("⌂", AppLocalization.Get(TextKeys.Game.MainMenuButton));
             btnMainMenu.Dock = DockStyle.Left;
             btnMainMenu.Width = 56;
             btnMainMenu.Font = UIStyles.Fonts.Icon;

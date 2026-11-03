@@ -36,7 +36,7 @@ namespace DealOrNoDeal
                 if (!guard.IsFirstInstance)
                 {
                     MessageBox.Show(
-                        AppLocalization.Get("App.AlreadyRunning"),
+                        AppLocalization.Get(TextKeys.App.AlreadyRunning),
                         "Deal or No Deal",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Info);
