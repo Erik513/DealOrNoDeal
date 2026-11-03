@@ -131,4 +131,50 @@ public sealed class PersistenceTests : IDisposable
         Assert.Null(GameSettings.HighestAmount);
         Assert.Null(GameSettings.HighestAmountDate);
     }
+
+    [Fact]
+    public void Writing_ReplacesTheFile_AndLeavesNoTemporaryFileBehind()
+    {
+        Assert.True(AppDataStore.WriteLines("data.txt", new[] { "one", "two" }));
+        Assert.True(AppDataStore.WriteLines("data.txt", new[] { "three" }));
+
+        Assert.Equal(new[] { "three" }, AppDataStore.ReadLines("data.txt"));
+        Assert.Equal(new[] { "data.txt" }, Directory.GetFiles(folder).Select(Path.GetFileName).ToArray());
+    }
+
+    [Fact]
+    public void Writing_ReportsAFailure_InsteadOfThrowing()
+    {
+        // The "folder" is an existing file, so it cannot be created.
+        string blocker = Path.Combine(Path.GetTempPath(), "DealOrNoDeal.Tests.blocker." + Guid.NewGuid().ToString("N"));
+        File.WriteAllText(blocker, "x");
+
+        try
+        {
+            AppDataStore.AppFolder = blocker;
+
+            Assert.False(AppDataStore.WriteLines("data.txt", new[] { "one" }));
+        }
+        finally
+        {
+            File.Delete(blocker);
+        }
+    }
+
+    [Fact]
+    public void AFailedWrite_KeepsTheOldFile()
+    {
+        AppDataStore.WriteLines("data.txt", new[] { "old" });
+
+        // A lazy sequence that throws half way through writing.
+        IEnumerable<string> Broken()
+        {
+            yield return "new";
+            throw new InvalidOperationException("boom");
+        }
+
+        Assert.False(AppDataStore.WriteLines("data.txt", Broken()));
+        Assert.Equal(new[] { "old" }, AppDataStore.ReadLines("data.txt"));
+        Assert.Single(Directory.GetFiles(folder));
+    }
 }

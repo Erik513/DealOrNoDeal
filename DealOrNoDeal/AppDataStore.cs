@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace DealOrNoDeal
@@ -45,17 +46,42 @@ namespace DealOrNoDeal
 
         /// <summary>
         /// Best-effort - if saving fails (e.g. no write access), the
-        /// caller's data just won't persist to the next launch.
+        /// caller's data just won't persist to the next launch; the failure
+        /// is traced and returned as false, not thrown. The text goes to a
+        /// temporary file first and replaces the real one only once it is
+        /// complete, so a crash or a full disk in the middle of writing
+        /// cannot leave the player's save half empty.
         /// </summary>
-        public static void WriteLines(string fileName, IEnumerable<string> lines)
+        public static bool WriteLines(string fileName, IEnumerable<string> lines)
         {
+            string filePath = Path.Combine(AppFolder, fileName);
+            string temporaryPath = filePath + ".tmp";
+
             try
             {
                 Directory.CreateDirectory(AppFolder);
-                File.WriteAllLines(Path.Combine(AppFolder, fileName), lines);
+                File.WriteAllLines(temporaryPath, lines);
+
+                if (File.Exists(filePath))
+                    File.Replace(temporaryPath, filePath, null);
+                else
+                    File.Move(temporaryPath, filePath);
+
+                return true;
             }
-            catch
+            catch (Exception exception)
             {
+                Trace.TraceError("Saving " + filePath + " failed: " + exception.Message);
+
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (Exception)
+                {
+                }
+
+                return false;
             }
         }
     }
