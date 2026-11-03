@@ -211,6 +211,18 @@ namespace DealOrNoDeal
             revealTimer = new Timer();
             revealTimer.Tick += (s, e) => RevealOffer();
 
+            // Hidden while the banker is still "calculating" (e.g. the game
+            // was restarted or left to the main menu): the pending reveal
+            // must not fire later into whatever game is running by then.
+            VisibleChanged += (s, e) =>
+            {
+                if (Visible)
+                    return;
+
+                revealTimer.Stop();
+                revealed = true;
+            };
+
             main.Controls.Add(pboxOfferImage, 0, 0);
             main.Controls.Add(actionBarHost, 0, 1);
 

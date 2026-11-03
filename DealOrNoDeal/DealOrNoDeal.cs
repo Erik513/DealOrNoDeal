@@ -262,6 +262,9 @@ namespace DealOrNoDeal
         /// </summary>
         private void RevealFinalCase(PictureBox caseBox)
         {
+            if (caseBox == null || IsGameOver)
+                return;
+
             finalChoiceView.Visible = false;
             SetInfoText("Game.YourCase");
 
@@ -340,6 +343,11 @@ namespace DealOrNoDeal
             finalChoiceView.Visible = false;
         }
 
+        private bool IsPhaseViewShowing()
+        {
+            return bankerOfferView.Visible || caseOpeningView.Visible || finalChoiceView.Visible;
+        }
+
         private void DisableAllCases()
         {
             foreach (PictureBox caseBox in caseList)
@@ -396,18 +404,28 @@ namespace DealOrNoDeal
 
         private async void CheckForUpdatesAsync()
         {
-            using (HttpClient checkHttpClient = new HttpClient())
-            using (HttpClient downloadHttpClient = new HttpClient())
+            // async void: an exception here would reach the UI thread's
+            // unhandled-exception handler and could end the game. The
+            // update check is a convenience, so any failure just means
+            // "no update".
+            try
             {
-                AppUpdater updater = new AppUpdater(
-                    UpdateRepositoryOwner,
-                    UpdateRepositoryName,
-                    checkHttpClient,
-                    downloadHttpClient);
+                using (HttpClient checkHttpClient = new HttpClient())
+                using (HttpClient downloadHttpClient = new HttpClient())
+                {
+                    AppUpdater updater = new AppUpdater(
+                        UpdateRepositoryOwner,
+                        UpdateRepositoryName,
+                        checkHttpClient,
+                        downloadHttpClient);
 
-                Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+                    Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
-                await updater.CheckForUpdateAsync(currentVersion, UpdateCheckTimeout, this);
+                    await updater.CheckForUpdateAsync(currentVersion, UpdateCheckTimeout, this);
+                }
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -554,6 +572,11 @@ namespace DealOrNoDeal
 
         private void HandleCaseClicked(PictureBox clickedCase)
         {
+            // A reveal, an offer or the final choice is on screen - the
+            // case underneath must not count as a click on its own.
+            if (IsGameOver || IsPhaseViewShowing())
+                return;
+
             casesClicked += 1;
 
             if (selectedCase == null)
@@ -673,7 +696,7 @@ namespace DealOrNoDeal
         /// </summary>
         private void EndGame(string wonAmount, decimal wonAmountValue, string wonAmountFormat, string resultLabel)
         {
-            if (IsGameOver)
+            if (IsGameOver || selectedCase == null)
                 return;
 
             IsGameOver = true;
