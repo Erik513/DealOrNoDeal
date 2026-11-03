@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkCore;
+using ErikwnkCore.Updater;
 using ErikwnkWFUI;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
@@ -48,6 +49,8 @@ namespace DealOrNoDeal
         private const string UpdateRepositoryName = "DealOrNoDeal";
         private static readonly TimeSpan UpdateCheckTimeout = TimeSpan.FromSeconds(5);
         private bool updateCheckStarted;
+        private HttpClient checkHttpClient;
+        private HttpClient downloadHttpClient;
 
         private PictureBox selectedCase;
         private Button lastOpenedButton;
@@ -102,8 +105,18 @@ namespace DealOrNoDeal
                 return Image.FromStream(stream);
         }
 
+        // The version text reserves the strip in the bottom-right corner,
+        // where the update button appears when a newer release exists.
+        private static FormOptions CreateOptions()
+        {
+            FormOptions options = FormOptions.CreateStandard("DealOrNoDeal", titleTextAlign: ContentAlignment.MiddleLeft, icon: LoadAppIcon());
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            options.VersionText = "v" + version.Major + "." + version.Minor + "." + Math.Max(version.Build, 0);
+            return options;
+        }
+
         public DealOrNoDeal()
-            : base(FormOptions.CreateStandard("DealOrNoDeal", titleTextAlign: ContentAlignment.MiddleLeft, icon: LoadAppIcon()))
+            : base(CreateOptions())
         {
             InitializeComponent();
 
@@ -348,23 +361,48 @@ namespace DealOrNoDeal
             // "no update".
             try
             {
-                using (HttpClient checkHttpClient = new HttpClient())
-                using (HttpClient downloadHttpClient = new HttpClient())
+                // Kept for the whole run: the update button can start the
+                // download long after this check has finished.
+                checkHttpClient = new HttpClient();
+                downloadHttpClient = new HttpClient();
+                AppUpdater updater = new AppUpdater(
+                    UpdateRepositoryOwner,
+                    UpdateRepositoryName,
+                    checkHttpClient,
+                    downloadHttpClient);
+
+                Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+
+                UpdateCheckResult result = await updater.CheckForUpdateAsync(currentVersion, UpdateCheckTimeout);
+                if (result == null || IsDisposed)
+                    return;
+
+                // The button stays for as long as the update is not installed,
+                // also for a skipped version - the player can still update
+                // whenever they want to.
+                VersionStrip?.Controls.Add(updater.CreateUpdateAvailableButton(result, currentVersion, this));
+
+                string latestVersion = result.LatestVersion.ToString();
+                if (latestVersion == GameSettings.SkippedUpdateVersion)
+                    return;
+
+                UpdateOutcome outcome = await updater.ShowUpdatePromptAsync(result, currentVersion, this, allowSkip: true);
+                if (outcome == UpdateOutcome.Skipped)
                 {
-                    AppUpdater updater = new AppUpdater(
-                        UpdateRepositoryOwner,
-                        UpdateRepositoryName,
-                        checkHttpClient,
-                        downloadHttpClient);
-
-                    Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-
-                    await updater.CheckForUpdateAsync(currentVersion, UpdateCheckTimeout, this);
+                    GameSettings.SkippedUpdateVersion = latestVersion;
+                    GameSettings.Save();
                 }
             }
             catch (Exception)
             {
             }
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            checkHttpClient?.Dispose();
+            downloadHttpClient?.Dispose();
+            base.OnFormClosed(e);
         }
 
         // Dragging the window edge makes Windows send a lot of WM_SIZE

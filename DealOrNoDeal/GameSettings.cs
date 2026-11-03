@@ -33,6 +33,10 @@ namespace DealOrNoDeal
         // record since history itself only holds the last 20 games.
         public static string HighestAmountResultLabel { get; set; }
 
+        // The update version the player chose "Skip this version" for -
+        // no startup prompt for it any more (the update button stays).
+        public static string SkippedUpdateVersion { get; set; }
+
         /// <summary>
         /// Loads saved settings into AppLocalization/AppCurrencyFormatter.
         /// Call once at startup, before building any UI. Missing or
@@ -72,6 +76,8 @@ namespace DealOrNoDeal
                     HighestAmountDate = date;
                 else if (key == "HighestAmountResultLabel")
                     HighestAmountResultLabel = value;
+                else if (key == "SkippedUpdateVersion")
+                    SkippedUpdateVersion = value;
             }
         }
 
@@ -88,6 +94,8 @@ namespace DealOrNoDeal
             AddIfPresent(lines, "HighestAmount", HighestAmount);
             AddIfPresent(lines, "HighestAmountDate", HighestAmountDate);
             AddIfPresent(lines, "HighestAmountResultLabel", HighestAmountResultLabel);
+            if (!string.IsNullOrEmpty(SkippedUpdateVersion))
+                lines.Add("SkippedUpdateVersion=" + SkippedUpdateVersion);
 
             AppDataStore.WriteLines(FileName, lines);
         }
