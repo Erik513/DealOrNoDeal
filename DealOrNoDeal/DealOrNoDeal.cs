@@ -19,38 +19,6 @@ namespace DealOrNoDeal
 {
     public partial class DealOrNoDeal : AppForm
     {
-        // Money amounts for the 30 cases, in case-1..30 order. Plain
-        // numbers, not pre-formatted strings - display text (with the
-        // currently selected currency's symbol/format) is generated on
-        // demand via AppCurrencyFormatter, so the currency can be switched
-        // without touching this list.
-        private static readonly decimal[] CaseAmountValues =
-        {
-            0, 1, 5, 10, 20, 50, 75, 100, 200, 300,
-            400, 500, 750, 1000, 2500, 5000, 7500, 10000, 15000, 20000,
-            25000, 50000, 75000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000
-        };
-
-        // How many cases are left to open once the info text is next shown,
-        // keyed by the click count it applies from. Round thresholds match
-        // BankerOfferCalculator's offer rounds (plus click 1, the very
-        // first case pick, which has no banker offer of its own) - but the
-        // remaining-count values themselves are a separate, hand-tuned
-        // case-opening schedule with no mathematical link to the offer
-        // percentages, so they can't be derived from that table.
-        private static readonly Dictionary<int, int> CasesRemainingByRound = new Dictionary<int, int>
-        {
-            { 1, 7 },
-            { 8, 6 },
-            { 14, 5 },
-            { 19, 4 },
-            { 23, 2 },
-            { 25, 2 },
-            { 27, 1 },
-            { 28, 1 },
-            { 29, 0 }
-        };
-
         // The two amount-display formats used throughout: whole amounts for
         // the 30 fixed case values, and cents-included for the banker's own
         // computed offer (a percentage of an average, so rarely a round
@@ -61,10 +29,8 @@ namespace DealOrNoDeal
         private readonly List<PictureBox> caseList = new List<PictureBox>();
         private readonly List<Button> buttonList = new List<Button>();
 
-        // Single source of truth for which case holds which amount (index
-        // into CaseAmounts/CaseAmountValues) - independent of display
-        // properties such as Tag or BackColor.
-        private readonly Dictionary<PictureBox, int> caseAmountIndex = new Dictionary<PictureBox, int>();
+        // The rules and the state of the running game, without any UI.
+        private readonly GameState state = new GameState(new Random());
 
         // Each case's number (1-30, already printed on the case artwork
         // itself) - used to say which case was cashed in at the end of a
@@ -76,12 +42,6 @@ namespace DealOrNoDeal
         // untranslated, same as "Deal Or No Deal ?" itself.
         private const string DealResultLabel = "Deal";
 
-        // Indices of the amounts that haven't been revealed yet - basis for
-        // the banker's offer average calculation.
-        private readonly HashSet<int> remainingAmountIndices = new HashSet<int>();
-
-        private readonly Random random = new Random();
-
         private static readonly Size OwnCaseSize = new Size(140, 140);
 
         private const string UpdateRepositoryOwner = "Erik513";
@@ -90,10 +50,8 @@ namespace DealOrNoDeal
         private bool updateCheckStarted;
 
         private PictureBox selectedCase;
-        private int casesClicked;
-        private int casesRemaining;
         private Button lastOpenedButton;
-        private bool IsGameOver;
+        private bool IsGameOver => state.IsOver;
 
         // Core controls addressed by the game logic.
         private Panel panelMyCase;
@@ -121,26 +79,12 @@ namespace DealOrNoDeal
         // Set only while the final (keep/swap) case reveal is playing, so
         // CaseOpeningView_CaseOpenedCompleted knows to end the game instead
         // of continuing the normal open-more-cases flow once it's dismissed.
-        private string pendingFinalResultAmount;
-        private decimal pendingFinalResultValue;
-        private string pendingFinalResultLabel;
+        private GameResult pendingFinalResult;
 
-        // True only when the game ended by keeping the original case - in
-        // that case its content IS the winnings already shown, so the
-        // separate "your own case contained..." line on the game-over
-        // screen would just repeat the same number. Stays false (and so
-        // the line stays shown) for an accepted banker offer or a swap,
-        // where it reveals something not shown anywhere else.
-        private bool endedByKeepingOwnCase;
-
-        // Raw winnings amount + the format it was shown with (case amounts
-        // use "#,0", banker offers - computed percentages - use the default
-        // "#,0.00"), remembered so RefreshCurrency can re-format the
-        // game-over screen too instead of leaving it stuck in whatever
-        // currency was active when the round ended.
-        private decimal wonAmountValue;
-        private string wonAmountFormat;
-        private decimal? shownOwnCaseAmountValue;
+        // How the finished game ended, remembered so RefreshCurrency can
+        // re-format the game-over screen too instead of leaving it stuck in
+        // whatever currency was active when the round ended.
+        private GameResult finalResult;
 
         // Remembered so RefreshLanguage can rebuild whatever labelInfoText
         // is currently showing (it changes constantly during play) in the
@@ -162,13 +106,12 @@ namespace DealOrNoDeal
             : base(FormOptions.CreateStandard("DealOrNoDeal", titleTextAlign: ContentAlignment.MiddleLeft, icon: LoadAppIcon()))
         {
             InitializeComponent();
-            InitializeCaseAmounts();
 
             SetInfoText("Game.ChooseCase");
             selectedCase = null;
 
             bankerOfferView.OfferDeclined += HandleOfferDeclined;
-            bankerOfferView.OfferAccepted += amount => EndGame(amount, currentOfferAmount ?? 0m, OfferAmountFormat, DealResultLabel);
+            bankerOfferView.OfferAccepted += amount => EndGame(new GameResult(currentOfferAmount ?? 0m, OfferAmountFormat, DealResultLabel, keptOwnCase: false));
             bankerOfferView.OfferRevealed += HandleOfferRevealed;
             caseOpeningView.AnimationCompleted += CaseOpeningView_AnimationCompleted;
             caseOpeningView.CaseOpenedCompleted += CaseOpeningView_CaseOpenedCompleted;
@@ -231,27 +174,27 @@ namespace DealOrNoDeal
             // buttonList[i] always corresponds to CaseAmountValues[i] - set
             // that way in BuildAmountStrip and never reordered.
             for (int i = 0; i < buttonList.Count; i++)
-                buttonList[i].Text = AppCurrencyFormatter.Format(CaseAmountValues[i], WholeAmountFormat);
+                buttonList[i].Text = AppCurrencyFormatter.Format(GameState.CaseAmountValues[i], WholeAmountFormat);
 
             RenderOfferLog();
 
             if (currentOfferAmount.HasValue)
                 bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(currentOfferAmount.Value));
 
-            if (IsGameOver)
+            if (IsGameOver && finalResult != null)
             {
-                gameOverView.ShowResult(AppCurrencyFormatter.Format(wonAmountValue, wonAmountFormat));
+                gameOverView.ShowResult(AppCurrencyFormatter.Format(finalResult.Value, finalResult.Format));
 
-                if (shownOwnCaseAmountValue.HasValue)
-                    gameOverView.ShowOwnCaseAmount(AppCurrencyFormatter.Format(shownOwnCaseAmountValue.Value, WholeAmountFormat));
+                if (!finalResult.KeptOwnCase)
+                    gameOverView.ShowOwnCaseAmount(AmountTextOf(state.OwnCase.Value));
             }
 
             homeScreenView.RefreshRecordsDisplay();
         }
 
-        private string AmountTextOf(PictureBox caseBox)
+        private string AmountTextOf(int caseNumber)
         {
-            return AppCurrencyFormatter.Format(CaseAmountValues[caseAmountIndex[caseBox]], WholeAmountFormat);
+            return AppCurrencyFormatter.Format(state.AmountOf(caseNumber), WholeAmountFormat);
         }
 
         /// <summary>
@@ -268,12 +211,14 @@ namespace DealOrNoDeal
             finalChoiceView.Visible = false;
             SetInfoText("Game.YourCase");
 
-            endedByKeepingOwnCase = caseBox == selectedCase;
-            pendingFinalResultAmount = AmountTextOf(caseBox);
-            pendingFinalResultValue = CaseAmountValues[caseAmountIndex[caseBox]];
-            pendingFinalResultLabel = caseNumbers[caseBox].ToString(CultureInfo.InvariantCulture);
+            int caseNumber = caseNumbers[caseBox];
+            pendingFinalResult = new GameResult(
+                state.AmountOf(caseNumber),
+                WholeAmountFormat,
+                caseNumber.ToString(CultureInfo.InvariantCulture),
+                keptOwnCase: caseBox == selectedCase);
             caseOpeningView.SlowReveal = true;
-            caseOpeningView.SetCaseAmount(pendingFinalResultAmount);
+            caseOpeningView.SetCaseAmount(AmountTextOf(caseNumber));
             caseOpeningView.Visible = true;
             caseOpeningView.BringToFront();
         }
@@ -285,19 +230,12 @@ namespace DealOrNoDeal
         /// </summary>
         private void RestartGame()
         {
-            casesClicked = 0;
-            casesRemaining = 0;
+            state.Reset();
             selectedCase = null;
             lastOpenedButton = null;
             lastRemainingCase = null;
-            pendingFinalResultAmount = null;
-            pendingFinalResultLabel = null;
-            endedByKeepingOwnCase = false;
-            IsGameOver = false;
-
-            caseAmountIndex.Clear();
-            remainingAmountIndices.Clear();
-            InitializeCaseAmounts();
+            pendingFinalResult = null;
+            finalResult = null;
 
             offerHistoryValues.Clear();
             currentOfferAmount = null;
@@ -462,27 +400,6 @@ namespace DealOrNoDeal
                 control.ResumeLayout(false);
         }
 
-        /// <summary>
-        /// Distributes the 30 fixed money amounts randomly across the 30
-        /// cases - once per round. From here on this is the only place that
-        /// rolls the dice; the rest of the game logic only ever reads
-        /// caseAmountIndex/remainingAmountIndices.
-        /// </summary>
-        private void InitializeCaseAmounts()
-        {
-            List<int> availableIndices = Enumerable.Range(0, CaseAmountValues.Length).ToList();
-
-            foreach (PictureBox caseBox in caseList)
-            {
-                int randomPosition = random.Next(availableIndices.Count);
-                int amountIndex = availableIndices[randomPosition];
-                availableIndices.RemoveAt(randomPosition);
-
-                caseAmountIndex[caseBox] = amountIndex;
-                remainingAmountIndices.Add(amountIndex);
-            }
-        }
-
         private void RefreshHomeScreenRecords()
         {
             homeScreenView.SetRecords(
@@ -509,8 +426,8 @@ namespace DealOrNoDeal
             // it, so adding the offer there immediately would spoil it
             // well before the suspense delay/reveal actually happens.
             bankerOfferView.SetOfferAmountText(AppCurrencyFormatter.Format(offerValue));
-            bankerOfferView.SetCasesUntilNextOffer(BankerOfferCalculator.CalculateCasesUntilNextOffer(casesClicked));
-            bankerOfferView.BeginRevealDelay(BankerOfferCalculator.CalculateRevealDelayMs(casesClicked));
+            bankerOfferView.SetCasesUntilNextOffer(state.CasesUntilNextOffer);
+            bankerOfferView.BeginRevealDelay(state.RevealDelayMs);
         }
 
         /// <summary>
@@ -577,9 +494,9 @@ namespace DealOrNoDeal
             if (IsGameOver || IsPhaseViewShowing())
                 return;
 
-            casesClicked += 1;
+            CasePick pick = state.Pick(caseNumbers[clickedCase]);
 
-            if (selectedCase == null)
+            if (pick == CasePick.OwnCase)
             {
                 selectedCase = clickedCase;
                 // Reparent first, while still Dock=Fill (matching how this
@@ -599,10 +516,8 @@ namespace DealOrNoDeal
             else
             {
                 clickedCase.Visible = false;
-                int amountIndex = caseAmountIndex[clickedCase];
-                Button matchedButton = buttonList[amountIndex];
+                Button matchedButton = buttonList[state.AmountIndexOf(caseNumbers[clickedCase])];
                 lastOpenedButton = matchedButton;
-                remainingAmountIndices.Remove(amountIndex);
                 OpenCases();
                 caseOpeningView.SetCaseAmount(matchedButton.Text);
             }
@@ -615,14 +530,11 @@ namespace DealOrNoDeal
 
         private void CaseOpeningView_CaseOpenedCompleted(object sender, EventArgs e)
         {
-            if (pendingFinalResultAmount != null)
+            if (pendingFinalResult != null)
             {
-                string resultAmount = pendingFinalResultAmount;
-                decimal resultValue = pendingFinalResultValue;
-                string resultLabel = pendingFinalResultLabel;
-                pendingFinalResultAmount = null;
-                pendingFinalResultLabel = null;
-                EndGame(resultAmount, resultValue, WholeAmountFormat, resultLabel);
+                GameResult result = pendingFinalResult;
+                pendingFinalResult = null;
+                EndGame(result);
                 return;
             }
 
@@ -639,22 +551,17 @@ namespace DealOrNoDeal
 
         private void UpdateInfoText()
         {
-            if (CasesRemainingByRound.TryGetValue(casesClicked, out int newCasesRemaining))
-                casesRemaining = newCasesRemaining;
-
-            string key = casesRemaining == 1 ? "Game.OpenMoreCaseSingular" : "Game.OpenMoreCases";
-            SetInfoText(key, casesRemaining);
-            casesRemaining--;
+            int casesToOpen = state.NextCasesToOpen();
+            string key = casesToOpen == 1 ? "Game.OpenMoreCaseSingular" : "Game.OpenMoreCases";
+            SetInfoText(key, casesToOpen);
         }
 
         private void DealerMakesOffer()
         {
-            if (BankerOfferCalculator.TryGetOfferPercentage(casesClicked, out decimal baseOfferPercentage))
-            {
-                decimal[] remainingValues = remainingAmountIndices.Select(index => CaseAmountValues[index]).ToArray();
-                decimal bankerOffer = BankerOfferCalculator.CalculateOffer(baseOfferPercentage, remainingValues, random);
-                ShowBankerOffer(bankerOffer);
-            }
+            decimal? bankerOffer = state.TryMakeOffer();
+
+            if (bankerOffer.HasValue)
+                ShowBankerOffer(bankerOffer.Value);
         }
 
         /// <summary>
@@ -666,7 +573,7 @@ namespace DealOrNoDeal
         /// </summary>
         private void HandleOfferDeclined()
         {
-            if (casesClicked == BankerOfferCalculator.LastRound)
+            if (state.IsLastOfferRound)
             {
                 ShowFinalChoice();
                 return;
@@ -677,7 +584,7 @@ namespace DealOrNoDeal
 
         private void ShowFinalChoice()
         {
-            lastRemainingCase = caseList.FirstOrDefault(c => c.Visible && c != selectedCase);
+            lastRemainingCase = state.LastRemainingCase.HasValue ? caseList[state.LastRemainingCase.Value - 1] : null;
 
             // Once the final choice is showing, nothing in the case grid
             // may be clickable anymore - otherwise a click on the last
@@ -694,24 +601,23 @@ namespace DealOrNoDeal
         /// Ends the game unambiguously - whether by accepting a banker's
         /// offer, or by keeping/swapping the case at the very end.
         /// </summary>
-        private void EndGame(string wonAmount, decimal wonAmountValue, string wonAmountFormat, string resultLabel)
+        private void EndGame(GameResult result)
         {
-            if (IsGameOver || selectedCase == null)
+            if (!state.TryFinish())
                 return;
 
-            IsGameOver = true;
-            this.wonAmountValue = wonAmountValue;
-            this.wonAmountFormat = wonAmountFormat;
+            finalResult = result;
+            string wonAmount = AppCurrencyFormatter.Format(result.Value, result.Format);
 
-            if (!GameSettings.HighestAmount.HasValue || wonAmountValue > GameSettings.HighestAmount.Value)
+            if (!GameSettings.HighestAmount.HasValue || result.Value > GameSettings.HighestAmount.Value)
             {
-                GameSettings.HighestAmount = wonAmountValue;
+                GameSettings.HighestAmount = result.Value;
                 GameSettings.HighestAmountDate = DateTime.Now;
-                GameSettings.HighestAmountResultLabel = resultLabel;
+                GameSettings.HighestAmountResultLabel = result.Label;
             }
 
             GameSettings.Save();
-            GameHistory.Record(wonAmountValue, resultLabel);
+            GameHistory.Record(result.Value, result.Label);
             RefreshHomeScreenRecords();
 
             DisableAllCases();
@@ -740,16 +646,10 @@ namespace DealOrNoDeal
             // the headline number above: an accepted banker offer or a
             // swap. If the player kept their own case, its content already
             // IS the winnings, so the line would just repeat that number.
-            if (endedByKeepingOwnCase)
-            {
-                shownOwnCaseAmountValue = null;
+            if (result.KeptOwnCase)
                 gameOverView.HideOwnCaseAmount();
-            }
             else
-            {
-                shownOwnCaseAmountValue = CaseAmountValues[caseAmountIndex[selectedCase]];
-                gameOverView.ShowOwnCaseAmount(AmountTextOf(selectedCase));
-            }
+                gameOverView.ShowOwnCaseAmount(AmountTextOf(state.OwnCase.Value));
 
             gameOverView.Visible = true;
             gameOverView.BringToFront();

@@ -286,7 +286,7 @@ namespace DealOrNoDeal
 
                 int caseNumber = startIndex + i + 1;
                 Button amountButton = UIStyles.Buttons.CreateStandard(
-                    AppCurrencyFormatter.Format(CaseAmountValues[caseNumber - 1], WholeAmountFormat));
+                    AppCurrencyFormatter.Format(GameState.CaseAmountValues[caseNumber - 1], WholeAmountFormat));
                 amountButton.Name = "button" + caseNumber;
                 amountButton.Dock = DockStyle.Fill;
                 // 4, not 2 - the right strip's column consistently renders
